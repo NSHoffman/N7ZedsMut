@@ -32,7 +32,7 @@ function bool FireWeaponAt(Actor A)
             bTargetInSight = RelativeDir > 0.85;
 
             if (bTargetInSight) {
-                //Facing enemy
+                // Facing enemy
                 if (IsInPounceDist(A) && ZombieCrawler(Pawn).DoPounce()) {
                     LastPounceTime = Level.TimeSeconds;
                 }

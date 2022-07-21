@@ -31,43 +31,43 @@ simulated function bool HitCanInterruptAction()
 
 simulated event SetAnimAction(name NewAction)
 {
-	if (NewAction == '') {
-		return;
+    if (NewAction == '') {
+        return;
     }
 
-	ExpectingChannel = AttackAndMoveDoAnimAction(NewAction);
+    ExpectingChannel = AttackAndMoveDoAnimAction(NewAction);
     
     bWaitForAnim = false;
 
     if (Level.NetMode != NM_Client) {
-		AnimAction = NewAction;
-		bResetAnimAct = true;
-		ResetAnimActTime = Level.TimeSeconds + 0.3;
-	}
+        AnimAction = NewAction;
+        bResetAnimAct = true;
+        ResetAnimActTime = Level.TimeSeconds + 0.3;
+    }
 }
 
 simulated function int AttackAndMoveDoAnimAction(name AnimName)
 {
-	local int meleeAnimIndex;
+    local int meleeAnimIndex;
 
     if (AnimName == 'ClawAndMove') {
-		meleeAnimIndex = Rand(3);
-		AnimName = MeleeAnims[meleeAnimIndex];
-		CurrentDamtype = ZombieDamType[meleeAnimIndex];
-	}
+        meleeAnimIndex = Rand(3);
+        AnimName = MeleeAnims[meleeAnimIndex];
+        CurrentDamtype = ZombieDamType[meleeAnimIndex];
+    }
 
     if (
         AnimName == MeleeAnims[0] || 
         AnimName == MeleeAnims[1] || 
         AnimName == MeleeAnims[2]
     ) {
-		AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
-		PlayAnim(AnimName,, 0.1, 1);
+        AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
+        PlayAnim(AnimName,, 0.1, 1);
 
-		return 1;
-	}
+        return 1;
+    }
 
-	return super.DoAnimAction(AnimName);
+    return super.DoAnimAction(AnimName);
 }
 
 defaultProperties

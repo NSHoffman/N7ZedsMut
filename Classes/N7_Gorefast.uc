@@ -12,14 +12,14 @@ event PostBeginPlay()
 
 function RangedAttack(Actor A)
 {
-	Super(KFMonster).RangedAttack(A);
+    Super(KFMonster).RangedAttack(A);
 
-	if (
+    if (
         !bShotAnim && 
         !bDecapitated && 
         VSize(A.Location - Location) <= RageDistance
     ) {
-		GoToState('RunningState');
+        GoToState('RunningState');
     }
 }
 
@@ -54,9 +54,9 @@ state RunningState
         bKeepAccelerationWhileAttacking = LookTarget != None && bShotAnim && !bWaitForAnim;
 
         CheckAnimationAndGroundSpeed();
-    	if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking)
+        if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking)
         {
-    		Acceleration = AccelRate * Normal(LookTarget.Location - Location);
+            Acceleration = AccelRate * Normal(LookTarget.Location - Location);
         }
 
         Global.Tick(DeltaTime);

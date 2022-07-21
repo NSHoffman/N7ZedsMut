@@ -10,20 +10,20 @@ event PostBeginPlay()
 
 function RangedAttack(Actor A)
 {
-	if (bShotAnim || Physics == PHYS_Swimming)
-		return;
-	else if (CanAttack(A))
-	{
-		bShotAnim = true;
-		SetAnimAction(MeleeAnims[Rand(2)]);
-		CurrentDamType = ZombieDamType[0];
-		GoToState('SawingLoop');
-	}
+    if (bShotAnim || Physics == PHYS_Swimming)
+        return;
+    else if (CanAttack(A))
+    {
+        bShotAnim = true;
+        SetAnimAction(MeleeAnims[Rand(2)]);
+        CurrentDamType = ZombieDamType[0];
+        GoToState('SawingLoop');
+    }
 
-	if (!bDecapitated && Controller.Enemy != None)
-	{
+    if (!bDecapitated && Controller.Enemy != None)
+    {
         GotoState('RunningState');
-	}
+    }
 }
 
 state RunningState

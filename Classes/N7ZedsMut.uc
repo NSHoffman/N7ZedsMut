@@ -1,5 +1,8 @@
 class N7ZedsMut extends Engine.Mutator;
 
+#exec OBJ LOAD FILE=KF_Specimens_Trip_N7.utx
+#exec OBJ LOAD FILE=KF_Specimens_Trip_N7_Two.utx
+
 defaultproperties 
 {
     FriendlyName="N7 Zeds"

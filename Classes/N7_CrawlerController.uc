@@ -5,20 +5,20 @@ function bool FireWeaponAt(Actor A)
     local bool bReadyToPounce;
     local bool bTargetInSight;
 
-	local vector aFacing, aToB;
-	local float RelativeDir;
+    local vector aFacing, aToB;
+    local float RelativeDir;
 
     if (A == None) {
         A = Enemy;
     }
     
-	if ((A == None) || (Focus != A)) {
-		return false;
+    if ((A == None) || (Focus != A)) {
+        return false;
     }
 
-	if (CanAttack(A)) {
-	    Target = A;
-	    Monster(Pawn).RangedAttack(Target);
+    if (CanAttack(A)) {
+        Target = A;
+        Monster(Pawn).RangedAttack(Target);
     } else {
         bReadyToPounce = LastPounceTime < Level.TimeSeconds;
 

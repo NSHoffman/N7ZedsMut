@@ -1,4 +1,4 @@
-class N7_Fleshpound extends FPGlowMut.FleshpoundGlowing;
+class N7_Fleshpound extends N7_FleshpoundGlowing;
 
 state RageCharging
 {

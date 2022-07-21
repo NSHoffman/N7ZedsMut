@@ -130,37 +130,37 @@ simulated function CloakStalker()
         return;
     }
 
-	if (bSpotted)
-	{
-		if (Level.NetMode == NM_DedicatedServer)
-			return;
+    if (bSpotted)
+    {
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
 
-		Skins[0] = Finalblend'KFX.StalkerGlow';
-		Skins[1] = Finalblend'KFX.StalkerGlow';
-		bUnlit = true;
-		return;
-	}
+        Skins[0] = Finalblend'KFX.StalkerGlow';
+        Skins[1] = Finalblend'KFX.StalkerGlow';
+        bUnlit = true;
+        return;
+    }
 
-	if (!bDecapitated && !bCrispified)
-	{
-		Visibility = 1;
-		bCloaked = true;
+    if (!bDecapitated && !bCrispified)
+    {
+        Visibility = 1;
+        bCloaked = true;
 
-		if (Level.NetMode == NM_DedicatedServer)
-			return;
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
 
-		Skins[0] = Shader'KF_Specimens_Trip_N7.stalker_invisible';
-		Skins[1] = Shader'KF_Specimens_Trip_N7.stalker_invisible';
+        Skins[0] = Shader'KF_Specimens_Trip_N7.stalker_invisible';
+        Skins[1] = Shader'KF_Specimens_Trip_N7.stalker_invisible';
 
-		if (PlayerShadow != None)
-			PlayerShadow.bShadowActive = false;
-		if (RealTimeShadow != None)
-			RealTimeShadow.Destroy();
+        if (PlayerShadow != None)
+            PlayerShadow.bShadowActive = false;
+        if (RealTimeShadow != None)
+            RealTimeShadow.Destroy();
 
-		Projectors.Remove(0, Projectors.Length);
-		bAcceptsProjectors = false;
-		SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
-	}
+        Projectors.Remove(0, Projectors.Length);
+        bAcceptsProjectors = false;
+        SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+    }
 }
 
 simulated function UnCloakStalker()
@@ -170,43 +170,43 @@ simulated function UnCloakStalker()
         return;
     }
 
-	if (!bCrispified)
-	{
-		LastUncloakTime = Level.TimeSeconds;
+    if (!bCrispified)
+    {
+        LastUncloakTime = Level.TimeSeconds;
 
-		Visibility = default.Visibility;
-		bCloaked = false;
-		bUnlit = false;
+        Visibility = default.Visibility;
+        bCloaked = false;
+        bUnlit = false;
 
-		// 25% chance of our Enemy saying something about us being invisible
-		if (
+        // 25% chance of our Enemy saying something about us being invisible
+        if (
             Level.NetMode != NM_Client 
             && !KFGameType(Level.Game).bDidStalkerInvisibleMessage 
             && FRand() < 0.25 
             && Controller.Enemy != None 
             && PlayerController(Controller.Enemy.Controller) != None
         )
-		{
-			PlayerController(Controller.Enemy.Controller).Speech('AUTO', 17, "");
-			KFGameType(Level.Game).bDidStalkerInvisibleMessage = true;
-		}
+        {
+            PlayerController(Controller.Enemy.Controller).Speech('AUTO', 17, "");
+            KFGameType(Level.Game).bDidStalkerInvisibleMessage = true;
+        }
 
-		if (Level.NetMode == NM_DedicatedServer)
-			return;
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
 
-		if (Skins[0] != Combiner'KF_Specimens_Trip_N7.stalker_cmb')
-		{
-			Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
-			Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+        if (Skins[0] != Combiner'KF_Specimens_Trip_N7.stalker_cmb')
+        {
+            Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
+            Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
 
-			if (PlayerShadow != None)
-				PlayerShadow.bShadowActive = true;
+            if (PlayerShadow != None)
+                PlayerShadow.bShadowActive = true;
 
-			bAcceptsProjectors = true;
+            bAcceptsProjectors = true;
 
-			SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
-		}
-	}
+            SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+        }
+    }
 }
 
 simulated function SetZappedBehavior()
@@ -215,58 +215,58 @@ simulated function SetZappedBehavior()
 
     bUnlit = false;
 
-	// Handle setting the zed to uncloaked so the zapped overlay works properly
+    // Handle setting the zed to uncloaked so the zapped overlay works properly
     if (Level.Netmode != NM_DedicatedServer)
-	{
+    {
         Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
-		Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+        Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
 
-		if (PlayerShadow != None)
-			PlayerShadow.bShadowActive = true;
+        if (PlayerShadow != None)
+            PlayerShadow.bShadowActive = true;
 
-		bAcceptsProjectors = true;
-		SetOverlayMaterial(Material'KFZED_FX_T.Energy.ZED_overlay_Hit_Shdr', 999, true);
-	}
+        bAcceptsProjectors = true;
+        SetOverlayMaterial(Material'KFZED_FX_T.Energy.ZED_overlay_Hit_Shdr', 999, true);
+    }
 }
 
 function RemoveHead()
 {
-	Super.RemoveHead();
+    Super.RemoveHead();
 
-	if (!bCrispified)
-	{
-		Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
-		Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
-	}
+    if (!bCrispified)
+    {
+        Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
+        Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+    }
 }
 
 simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
 {
-	Super.PlayDying(DamageType,HitLoc);
+    Super.PlayDying(DamageType,HitLoc);
 
-	if (bUnlit)
-		bUnlit = !bUnlit;
+    if (bUnlit)
+        bUnlit = !bUnlit;
 
     LocalKFHumanPawn = none;
 
-	if (!bCrispified)
-	{
-		Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
-		Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
-	}
+    if (!bCrispified)
+    {
+        Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
+        Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+    }
 }
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.stalker_cmb');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.stalker_env_cmb');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.stalker_diff');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.stalker_spec');
-	myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.stalker_invisible');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.StalkerCloakOpacity_cmb');
-	myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.StalkerCloakEnv_rot');
-	myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.stalker_opacity_osc');
-	myLevel.AddPrecacheMaterial(Material'KFCharacters.StalkerSkin');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.stalker_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.stalker_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.stalker_diff');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.stalker_spec');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.stalker_invisible');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.StalkerCloakOpacity_cmb');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.StalkerCloakEnv_rot');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.stalker_opacity_osc');
+    myLevel.AddPrecacheMaterial(Material'KFCharacters.StalkerSkin');
 }
 
 defaultProperties

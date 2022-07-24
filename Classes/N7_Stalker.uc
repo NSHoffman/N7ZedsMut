@@ -5,7 +5,55 @@ simulated function Tick(float DeltaTime)
     local bool bKeepAccelerationWhileAttacking;
     bKeepAccelerationWhileAttacking = LookTarget != None && bShotAnim && !bWaitForAnim;
 
-    super.Tick(DeltaTime);
+    /** 
+     * This part is taken from parent ZombieStalker class
+     * because all the material sources are hardcoded inside its methods bodies
+     * but need to be changed here
+     */
+    Super(KFMonster).Tick(DeltaTime);
+    if (Level.NetMode != NM_DedicatedServer) 
+    {
+        if (bZapped)
+        {
+            NextCheckTime = Level.TimeSeconds;
+        }
+        else if (Level.TimeSeconds > NextCheckTime && Health > 0)
+        {
+            NextCheckTime = Level.TimeSeconds + 0.5;
+
+            if (
+                LocalKFHumanPawn != None 
+                && LocalKFHumanPawn.Health > 0 
+                && LocalKFHumanPawn.ShowStalkers() 
+                && VSizeSquared(Location - LocalKFHumanPawn.Location) < LocalKFHumanPawn.GetStalkerViewDistanceMulti() * 640000.0 // 640000 = 800 Units
+            )
+            {
+                bSpotted = True;
+            }
+            else
+            {
+                bSpotted = false;
+            }
+
+            if (!bSpotted && !bCloaked && Skins[0] != Combiner'KF_Specimens_Trip_N7.stalker_cmb')
+            {
+                UncloakStalker();
+            }
+            else if (Level.TimeSeconds - LastUncloakTime > 1.2)
+            {
+                if (bSpotted && Skins[0] != Finalblend'KFX.StalkerGlow')
+                {
+                    bUnlit = false;
+                    CloakStalker();
+                }
+                else if (Skins[0] != Shader'KF_Specimens_Trip_N7.stalker_invisible')
+                {
+                    CloakStalker();
+                }
+            }
+        }
+    }
+
 
     if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking) {
         Acceleration = AccelRate * Normal(LookTarget.Location - Location);
@@ -67,7 +115,158 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
         return 1;
     }
 
-    return super.DoAnimAction(AnimName);
+    return Super.DoAnimAction(AnimName);
+}
+
+/** 
+ * The whole purpose of overriding the following methods is
+ * to provide different material sources
+ */
+
+simulated function CloakStalker()
+{
+    if (bZapped)
+    {
+        return;
+    }
+
+    if (bSpotted)
+    {
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
+
+        Skins[0] = Finalblend'KFX.StalkerGlow';
+        Skins[1] = Finalblend'KFX.StalkerGlow';
+        bUnlit = true;
+        return;
+    }
+
+    if (!bDecapitated && !bCrispified)
+    {
+        Visibility = 1;
+        bCloaked = true;
+
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
+
+        Skins[0] = Shader'KF_Specimens_Trip_N7.stalker_invisible';
+        Skins[1] = Shader'KF_Specimens_Trip_N7.stalker_invisible';
+
+        if (PlayerShadow != None)
+            PlayerShadow.bShadowActive = false;
+        if (RealTimeShadow != None)
+            RealTimeShadow.Destroy();
+
+        Projectors.Remove(0, Projectors.Length);
+        bAcceptsProjectors = false;
+        SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+    }
+}
+
+simulated function UnCloakStalker()
+{
+    if (bZapped)
+    {
+        return;
+    }
+
+    if (!bCrispified)
+    {
+        LastUncloakTime = Level.TimeSeconds;
+
+        Visibility = default.Visibility;
+        bCloaked = false;
+        bUnlit = false;
+
+        // 25% chance of our Enemy saying something about us being invisible
+        if (
+            Level.NetMode != NM_Client 
+            && !KFGameType(Level.Game).bDidStalkerInvisibleMessage 
+            && FRand() < 0.25 
+            && Controller.Enemy != None 
+            && PlayerController(Controller.Enemy.Controller) != None
+        )
+        {
+            PlayerController(Controller.Enemy.Controller).Speech('AUTO', 17, "");
+            KFGameType(Level.Game).bDidStalkerInvisibleMessage = true;
+        }
+
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
+
+        if (Skins[0] != Combiner'KF_Specimens_Trip_N7.stalker_cmb')
+        {
+            Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
+            Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+
+            if (PlayerShadow != None)
+                PlayerShadow.bShadowActive = true;
+
+            bAcceptsProjectors = true;
+
+            SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+        }
+    }
+}
+
+simulated function SetZappedBehavior()
+{
+    Super.SetZappedBehavior();
+
+    bUnlit = false;
+
+    // Handle setting the zed to uncloaked so the zapped overlay works properly
+    if (Level.Netmode != NM_DedicatedServer)
+    {
+        Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
+        Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+
+        if (PlayerShadow != None)
+            PlayerShadow.bShadowActive = true;
+
+        bAcceptsProjectors = true;
+        SetOverlayMaterial(Material'KFZED_FX_T.Energy.ZED_overlay_Hit_Shdr', 999, true);
+    }
+}
+
+function RemoveHead()
+{
+    Super.RemoveHead();
+
+    if (!bCrispified)
+    {
+        Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
+        Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+    }
+}
+
+simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
+{
+    Super.PlayDying(DamageType,HitLoc);
+
+    if (bUnlit)
+        bUnlit = !bUnlit;
+
+    LocalKFHumanPawn = none;
+
+    if (!bCrispified)
+    {
+        Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
+        Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+    }
+}
+
+static simulated function PreCacheMaterials(LevelInfo myLevel)
+{
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.stalker_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.stalker_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.stalker_diff');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.stalker_spec');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.stalker_invisible');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.StalkerCloakOpacity_cmb');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.StalkerCloakEnv_rot');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.stalker_opacity_osc');
+    myLevel.AddPrecacheMaterial(Material'KFCharacters.StalkerSkin');
 }
 
 defaultProperties
@@ -75,4 +274,9 @@ defaultProperties
     MenuName="N7 Stalker"
     GroundSpeed=210.000000
     WaterSpeed=190.000000
+    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmStalker'
+    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegStalker'
+    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadStalker'
+    Skins(0)=Shader'KF_Specimens_Trip_N7.stalker_invisible'
+    Skins(1)=Shader'KF_Specimens_Trip_N7.stalker_invisible'
 }

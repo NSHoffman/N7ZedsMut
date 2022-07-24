@@ -3,10 +3,10 @@ class N7_HuskFireProjectile extends KFChar.HuskFireProjectile;
 /* Based on Engine.Projectile.Touch */
 simulated singular function Touch(Actor Other)
 {
-	local vector HitLocation, HitNormal;
+    local vector HitLocation, HitNormal;
 
-	if (Other == None || !(Other.bProjTarget || Other.bBlockActors))
-		return;
+    if (Other == None || !(Other.bProjTarget || Other.bBlockActors))
+        return;
 
     LastTouched = Other;
     if (Velocity == vect(0,0,0) || Other.IsA('Mover'))
@@ -40,16 +40,16 @@ simulated function ProcessTouch(Actor Other, Vector HitLocation)
         || Other.IsA('KFMonster') // Taken from SuperZombieMut
         || KFBulletWhipAttachment(Other) != None
     ) {
-		return;
+        return;
     }
 
-	if (Instigator != None)
-	{
-		OrigLoc = Instigator.Location;
-	}
+    if (Instigator != None)
+    {
+        OrigLoc = Instigator.Location;
+    }
 
-	if (!bDud)
-	{
+    if (!bDud)
+    {
         if ((VSizeSquared(Location - OrigLoc) < ArmDistSquared) || OrigLoc == vect(0,0,0))
         {
             if (Role == ROLE_Authority)
@@ -65,7 +65,7 @@ simulated function ProcessTouch(Actor Other, Vector HitLocation)
             SetPhysics(PHYS_Falling);
         }
         Explode(HitLocation, Normal(HitLocation - Other.Location));
-	}
+    }
 }
 
 defaultProperties

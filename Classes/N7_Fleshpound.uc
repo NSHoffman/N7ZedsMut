@@ -91,10 +91,21 @@ simulated function PostNetReceive()
     }
 }
 
+static simulated function PreCacheMaterials(LevelInfo myLevel)
+{
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.fleshpound_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.fleshpound_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.fleshpound_diff');
+}
+
 defaultproperties
 {
     MenuName="N7 Fleshpound"
     DrawScale=1.050000
     GroundSpeed=155.000000
     WaterSpeed=145.000000
+    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmPound'
+    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegPound'
+    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadPound'
+    Skins(0)=Combiner'KF_Specimens_Trip_N7.fleshpound_cmb'
 }

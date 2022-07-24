@@ -274,6 +274,9 @@ defaultProperties
     MenuName="N7 Stalker"
     GroundSpeed=210.000000
     WaterSpeed=190.000000
+    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmStalker'
+    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegStalker'
+    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadStalker'
     Skins(0)=Shader'KF_Specimens_Trip_N7.stalker_invisible'
     Skins(1)=Shader'KF_Specimens_Trip_N7.stalker_invisible'
 }

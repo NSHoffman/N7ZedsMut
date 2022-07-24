@@ -191,6 +191,9 @@ defaultProperties
     HuskFireProjClass=Class'N7ZedsMut.N7_HuskFireProjectile'
     /** @todo implement husk close quarters contact avoiding behaviour */
     // ControllerClass=Class'N7ZedsMut.N7_HuskController'
+    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmHusk'
+    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegHusk'
+    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadHusk'
     Skins(0)=Texture'KF_Specimens_Trip_N7_Two.burns.burns_tatters'
     Skins(1)=Shader'KF_Specimens_Trip_N7_Two.burns.burns_shdr'
 }

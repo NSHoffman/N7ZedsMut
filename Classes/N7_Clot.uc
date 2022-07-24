@@ -13,5 +13,8 @@ defaultProperties
     MenuName="N7 Clot"
     GroundSpeed=115.000000
     WaterSpeed=115.000000
+    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmClot'
+    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegClot'
+    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadClot'
     Skins(0)=Combiner'KF_Specimens_Trip_N7.clot_cmb'
 }

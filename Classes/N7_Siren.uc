@@ -20,7 +20,6 @@ defaultProperties
     MenuName="N7 Siren"
     ShakeEffectScalar=4.500000
     MinShakeEffectScale=3.250000
-    ScreamRadius=1000
     ScreamDamageType=Class'N7ZedsMut.N7_SirenScreamDamage'
     DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegSiren'
     DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadSiren'

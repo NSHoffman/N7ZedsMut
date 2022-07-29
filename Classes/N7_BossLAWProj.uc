@@ -50,15 +50,15 @@ simulated function ProcessTouch(Actor Other, Vector HitLocation)
 /** Cannot be dud */
 simulated function HitWall(vector HitNormal, actor Wall)
 {
-	// Use the instigator's location if it exists. This fixes issues with
-	// the original location of the projectile being really far away from
-	// the real Origloc due to it taking a couple of milliseconds to
-	// replicate the location to the client and the first replicated location has
-	// already moved quite a bit.
-	if (Instigator != None)
-	{
-		OrigLoc = Instigator.Location;
-	}
+    // Use the instigator's location if it exists. This fixes issues with
+    // the original location of the projectile being really far away from
+    // the real Origloc due to it taking a couple of milliseconds to
+    // replicate the location to the client and the first replicated location has
+    // already moved quite a bit.
+    if (Instigator != None)
+    {
+        OrigLoc = Instigator.Location;
+    }
 
     Super(Projectile).HitWall(HitNormal, Wall);
 }

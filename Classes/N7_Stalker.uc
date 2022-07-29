@@ -115,7 +115,7 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
         return 1;
     }
 
-    return Super.DoAnimAction(AnimName);
+    return Super(KFMonster).DoAnimAction(AnimName);
 }
 
 /** 

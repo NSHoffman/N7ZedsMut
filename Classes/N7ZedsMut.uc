@@ -30,8 +30,9 @@ function PostBeginPlay() {
     if (KFGT.MonsterCollection == Class'KFGameType'.default.MonsterCollection) 
     {
         KFGT.MonsterCollection = Class'N7ZedsMut.N7_MonstersCollection';
-        KFGT.SpecialEventMonsterCollections[0] = Class'N7ZedsMut.N7_MonstersCollection';
-        KFGT.FallbackMonsterClass = "N7ZedsMut.N7_Stalker";
+        KFGT.SpecialEventMonsterCollections[0] = KFGT.MonsterCollection;
+        KFGT.FallbackMonsterClass = KFGT.MonsterCollection.default.FallbackMonsterClass;
+        KFGT.EndGameBossClass = KFGT.MonsterCollection.default.EndGameBossClass;
 
         ReplaceMonsterClasses(KFGT.MonsterClasses, KFGT.MonsterCollection.default.MonsterClasses);
     }

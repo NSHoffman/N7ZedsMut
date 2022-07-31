@@ -175,6 +175,7 @@ function RangedAttack(Actor A)
     {
         return;
     }
+
     D = VSize(A.Location-Location);
     bOnlyE = (Pawn(A) != None && OnlyEnemyAround(Pawn(A)));
 
@@ -258,7 +259,7 @@ function RangedAttack(Actor A)
 
 function DoorAttack(Actor A)
 {
-    if (!bShotAnim && A != None)
+    if (!bShotAnim && A != None && Physics != PHYS_Swimming)
     {
         Controller.Target = A;
         bShotAnim = true;
@@ -287,7 +288,7 @@ function TakeDamage(
 
 function ClawDamageTarget()
 {
-    local vector PushDir;
+    local Vector PushDir;
     local name Anim;
     local float Frame, Rate, UsedMeleeDamage;
     local bool bDamagedSomeone, bChargeFromKite;
@@ -317,7 +318,7 @@ function ClawDamageTarget()
     if (Controller != None && Controller.Target != None)
         PushDir = (damageForce * Normal(Controller.Target.Location - Location));
     else
-        PushDir = damageForce * vector(Rotation);
+        PushDir = damageForce * Vector(Rotation);
 
     if (Anim == 'MeleeImpale')
     {
@@ -326,12 +327,12 @@ function ClawDamageTarget()
     else
     {
         OldTarget = Controller.Target;
-        foreach DynamicActors(class'KFHumanPawn', P)
+        foreach DynamicActors(Class'KFHumanPawn', P)
         {
             if ((P.Location - Location) dot PushDir > 0.0)
             {
                 Controller.Target = P;
-                bDamagedSomeone = bDamagedSomeone || MeleeDamageTarget(UsedMeleeDamage, damageForce * Normal(P.Location - Location)); // Always pushing players away added in Balance Round 3
+                bDamagedSomeone = bDamagedSomeone || MeleeDamageTarget(UsedMeleeDamage, damageForce * Normal(P.Location - Location));
             }
         }
         Controller.Target = OldTarget;
@@ -395,7 +396,7 @@ ignores RangedAttack;
         if (
             KFHumanPawn(InstigatedBy) != None && 
             KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo) != None &&
-            KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo).ClientVeteranSkill == class'KFVetCommando')
+            KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo).ClientVeteranSkill == Class'KFVetCommando')
         {
             Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
@@ -445,7 +446,7 @@ ignores RangedAttack;
         if (
             KFHumanPawn(InstigatedBy) != None && 
             KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo) != None &&
-            KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo).ClientVeteranSkill == class'KFVetCommando')
+            KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo).ClientVeteranSkill == Class'KFVetCommando')
         {
             Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
@@ -475,6 +476,7 @@ state FireChaingun
     function Tick(float Delta)
     {
         Super(KFMonster).Tick(Delta);
+
         if (bChargingPlayer)
         {
             SetGroundSpeed(GetOriginalGroundSpeed() * 1.5);
@@ -499,8 +501,10 @@ state FireChaingun
         {
             if (bFireAtWill && Channel != 1)
                 return;
+
             if (Controller.Target != None)
                 Controller.Focus = Controller.Target;
+
             bShotAnim = false;
             bFireAtWill = true;
             SetAnimAction('FireMG');
@@ -552,10 +556,11 @@ state FireMissile
 
     function AnimEnd(int Channel)
     {
-        local vector Start;
+        local Vector Start;
         local Rotator R;
 
         Start = GetBoneCoords('tip').Origin;
+
         if (Controller.Target == None)
         {
             Controller.Target = Controller.Enemy;
@@ -574,9 +579,9 @@ state FireMissile
         SavedFireProperties.bInstantHit = (SyringeCount < 1);
         SavedFireProperties.bTrySplash = (SyringeCount >= 2);
 
-        R = AdjustAim(SavedFireProperties,Start,100);
-        PlaySound(RocketFireSound, SLOT_Interact, 2.0,,TransientSoundRadius,, false);
-        Spawn(Class'N7_BossLAWProj',,,Start,R);
+        R = AdjustAim(SavedFireProperties, Start, 100);
+        PlaySound(RocketFireSound, SLOT_Interact, 2.0,, TransientSoundRadius,, false);
+        Spawn(Class'N7_BossLAWProj',,, Start, R);
 
         bShotAnim = true;
         Acceleration = vect(0, 0, 0);

@@ -1,16 +1,87 @@
 class N7_Stalker extends KFChar.ZombieStalker_STANDARD;
 
+/**
+ * Each stalker has a chance to spawn
+ * a squad of pseudo stalkers, projections
+ * that get killed if the host stalker is dead
+ */
+var Class<N7_Stalker> PseudoStalkerClass;
+var Array<N7_Stalker> PseudoStalkersSquad;
+
+var int MaxPseudoSquadSize;
+
+/** Spawning pseudo stalkers squad */
+simulated function PostBeginPlay()
+{
+    local int PseudoSquadSize;
+    PseudoSquadSize = Rand(MaxPseudoSquadSize + 1);
+
+    Super.PostBeginPlay();
+    SpawnPseudoSquad(PseudoSquadSize);
+}
+
+/* Don't interrupt stalker when she's trying to attack */
+simulated function bool HitCanInterruptAction()
+{
+    return !bShotAnim;
+}
+
+simulated event SetAnimAction(name NewAction)
+{
+    if (NewAction == '')
+    {
+        return;
+    }
+
+    ExpectingChannel = AttackAndMoveDoAnimAction(NewAction);
+    
+    bWaitForAnim = false;
+
+    if (Level.NetMode != NM_Client) 
+    {
+        AnimAction = NewAction;
+        bResetAnimAct = true;
+        ResetAnimActTime = Level.TimeSeconds + 0.3;
+    }
+}
+
+simulated function int AttackAndMoveDoAnimAction(name AnimName)
+{
+    local int meleeAnimIndex;
+
+    if (AnimName == 'ClawAndMove') 
+    {
+        meleeAnimIndex = Rand(3);
+        AnimName = MeleeAnims[meleeAnimIndex];
+        CurrentDamtype = ZombieDamType[meleeAnimIndex];
+    }
+
+    if (
+        AnimName == MeleeAnims[0] || 
+        AnimName == MeleeAnims[1] || 
+        AnimName == MeleeAnims[2]
+    ) {
+        AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
+        PlayAnim(AnimName,, 0.1, 1);
+
+        return 1;
+    }
+
+    return Super(KFMonster).DoAnimAction(AnimName);
+}
+
 simulated function Tick(float DeltaTime) 
 {
     local bool bKeepAccelerationWhileAttacking;
     bKeepAccelerationWhileAttacking = LookTarget != None && bShotAnim && !bWaitForAnim;
+
+    Super(KFMonster).Tick(DeltaTime);
 
     /** 
      * This part is taken from parent ZombieStalker class
      * because all the material sources are hardcoded inside its methods bodies
      * but need to be changed here
      */
-    Super(KFMonster).Tick(DeltaTime);
     if (Level.NetMode != NM_DedicatedServer) 
     {
         if (bZapped)
@@ -28,7 +99,7 @@ simulated function Tick(float DeltaTime)
                 && VSizeSquared(Location - LocalKFHumanPawn.Location) < LocalKFHumanPawn.GetStalkerViewDistanceMulti() * 640000.0 // 640000 = 800 Units
             )
             {
-                bSpotted = True;
+                bSpotted = true;
             }
             else
             {
@@ -55,7 +126,8 @@ simulated function Tick(float DeltaTime)
     }
 
 
-    if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking) {
+    if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking) 
+    {
         Acceleration = AccelRate * Normal(LookTarget.Location - Location);
     }
 }
@@ -65,63 +137,60 @@ function RangedAttack(Actor A)
     local bool bDoRangedAttack;
     bDoRangedAttack = CanAttack(A) && !(bShotAnim || Physics == PHYS_Swimming);
 
-    if (bDoRangedAttack) {
+    if (bDoRangedAttack) 
+    {
         bShotAnim = true;
         SetAnimAction('ClawAndMove');
     }
 }
 
-/* Don't interrupt stalker when she's trying to attack */
-simulated function bool HitCanInterruptAction()
+function SpawnPseudoSquad(int PseudoSquadSize)
 {
-    return !bShotAnim;
-}
+    local int i;
+    local N7_Stalker CurrentPseudoStalker;
 
-simulated event SetAnimAction(name NewAction)
-{
-    if (NewAction == '') {
-        return;
-    }
+    for (i = 0; i < PseudoSquadSize; i++)
+    {
+        CurrentPseudoStalker = Spawn(PseudoStalkerClass);
 
-    ExpectingChannel = AttackAndMoveDoAnimAction(NewAction);
-    
-    bWaitForAnim = false;
-
-    if (Level.NetMode != NM_Client) {
-        AnimAction = NewAction;
-        bResetAnimAct = true;
-        ResetAnimActTime = Level.TimeSeconds + 0.3;
+        if (CurrentPseudoStalker != None)
+        {
+            PseudoStalkersSquad[i] = CurrentPseudoStalker;
+        }
     }
 }
 
-simulated function int AttackAndMoveDoAnimAction(name AnimName)
+function KillPseudoSquad()
 {
-    local int meleeAnimIndex;
+    local int i;
 
-    if (AnimName == 'ClawAndMove') {
-        meleeAnimIndex = Rand(3);
-        AnimName = MeleeAnims[meleeAnimIndex];
-        CurrentDamtype = ZombieDamType[meleeAnimIndex];
+    for (i = 0; i < PseudoStalkersSquad.Length; i++)
+    {
+        if (PseudoStalkersSquad[i] != None)
+        {
+            PseudoStalkersSquad[i].Died(LastDamagedBy.Controller, LastDamagedByType, Location);
+            PseudoStalkersSquad[i] = None;
+        }
     }
 
-    if (
-        AnimName == MeleeAnims[0] || 
-        AnimName == MeleeAnims[1] || 
-        AnimName == MeleeAnims[2]
-    ) {
-        AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
-        PlayAnim(AnimName,, 0.1, 1);
-
-        return 1;
-    }
-
-    return Super(KFMonster).DoAnimAction(AnimName);
+    PseudoStalkersSquad.Length = 0;
 }
 
 /** 
- * The whole purpose of overriding the following methods is
- * to provide different material sources
+ * The whole purpose of overriding the methods below
+ * is to provide different material sources
  */
+
+function RemoveHead()
+{
+    Super.RemoveHead();
+
+    if (!bCrispified)
+    {
+        Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
+        Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
+    }
+}
 
 simulated function CloakStalker()
 {
@@ -203,7 +272,6 @@ simulated function UnCloakStalker()
                 PlayerShadow.bShadowActive = true;
 
             bAcceptsProjectors = true;
-
             SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
         }
     }
@@ -229,25 +297,16 @@ simulated function SetZappedBehavior()
     }
 }
 
-function RemoveHead()
-{
-    Super.RemoveHead();
-
-    if (!bCrispified)
-    {
-        Skins[1] = FinalBlend'KF_Specimens_Trip_N7.stalker_fb';
-        Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
-    }
-}
-
 simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
 {
-    Super.PlayDying(DamageType,HitLoc);
+    Super.PlayDying(DamageType, HitLoc);
+
+    KillPseudoSquad();
 
     if (bUnlit)
         bUnlit = !bUnlit;
 
-    LocalKFHumanPawn = none;
+    LocalKFHumanPawn = None;
 
     if (!bCrispified)
     {
@@ -274,6 +333,8 @@ defaultProperties
     MenuName="N7 Stalker"
     GroundSpeed=210.000000
     WaterSpeed=190.000000
+    MaxPseudoSquadSize=3;
+    PseudoStalkerClass=Class'N7ZedsMut.N7_PseudoStalker'
     DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmStalker'
     DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegStalker'
     DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadStalker'

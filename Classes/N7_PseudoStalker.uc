@@ -9,7 +9,53 @@ simulated function PostBeginPlay()
 
 function Timer()
 {
-    bBlockActors = true;
+    /** Sets bBlockActors to true after getting spawned */
+    if (!bBlockActors)
+    {
+        bBlockActors = true;
+    }
+
+    /** Resets bUnlit to false after KFX.StalkerGlow overlay */
+    if (bUnlit)
+    {
+        bUnlit = false;
+    }
+}
+
+simulated function int AttackAndMoveDoAnimAction(name AnimName)
+{
+    local int meleeAnimIndex;
+    local float AnimDuration;
+
+    if (AnimName == 'ClawAndMove') 
+    {
+        meleeAnimIndex = Rand(3);
+        AnimName = MeleeAnims[meleeAnimIndex];
+        CurrentDamtype = ZombieDamType[meleeAnimIndex];
+    }
+
+    if (
+        AnimName == MeleeAnims[0] || 
+        AnimName == MeleeAnims[1] || 
+        AnimName == MeleeAnims[2]
+    ) {
+        AnimDuration = GetAnimDuration(AnimName);
+
+        /**
+         * Apply StalkerGlow effect before hit
+         * To emphasize pseudo/holographic nature of this ZED
+         */
+        bUnlit = true;
+        SetOverlayMaterial(Finalblend'KFX.StalkerGlow', AnimDuration, true);
+        SetTimer(AnimDuration, false);
+
+        AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
+        PlayAnim(AnimName,, 0.1, 1);
+
+        return 1;
+    }
+
+    return Super(KFMonster).DoAnimAction(AnimName);
 }
 
 simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
@@ -37,13 +83,12 @@ simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
     LifeSpan = RagdollLifeSpan;
     LocalKFHumanPawn = None;
 
+    Visibility = default.Visibility;
+    bUnlit = true;
     /**
-     * Before death apply StalkerGlow effect
+     * Apply StalkerGlow effect before death
      * To emphasize pseudo/holographic nature of this ZED
      */
-    bUnlit = true;
-    Visibility = default.Visibility;
-
     Skins[0] = Finalblend'KFX.StalkerGlow';
     Skins[1] = Finalblend'KFX.StalkerGlow';
 
@@ -285,20 +330,9 @@ function PlayHit(
     }
 
     /** 
-     * Snippet responsible for blood splatter projectile spawn is removed
-     * As it is not needed for pseudo stalker wound/death animations
+     * Snippets responsible for blood splatter projectile spawn, damageFX and M79 achievement stats are removed
+     * As those are not needed for pseudo stalker hit/death handling
      */
-
-    if (
-        InstigatedBy != None && InstigatedBy.PlayerReplicationInfo != None &&
-        KFSteamStatsAndAchievements(InstigatedBy.PlayerReplicationInfo.SteamStatsAndAchievements) != None &&
-        Health <= 0 && Damage > DamageType.default.HumanObliterationThreshhold && Damage != 1000 && 
-        (!bDecapitated || bPlayBrainSplash))
-    {
-        KFSteamStatsAndAchievements(InstigatedBy.PlayerReplicationInfo.SteamStatsAndAchievements).AddGibKill(Class<DamTypeM79Grenade>(damageType) != None);
-    }
-
-    // Removed DoDamageFX()
 }
 
 /** Ragdoll gets destroyed almost instantly */

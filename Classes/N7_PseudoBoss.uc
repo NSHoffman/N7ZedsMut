@@ -381,7 +381,7 @@ function float DifficultyHealthModifer()
 
 function float NumPlayersHealthModifer()
 {
-	return AdjustedHealthModifier;
+    return AdjustedHealthModifier;
 }
 
 function float DifficultyHeadHealthModifer()

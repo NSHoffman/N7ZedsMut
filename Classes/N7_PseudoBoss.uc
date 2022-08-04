@@ -1,11 +1,11 @@
-class N7_PseudoStalker extends N7_Stalker;
+class N7_PseudoBoss extends N7_Boss;
 
 var const float AdjustedHealthModifier;
 var const float AdjustedHeadHealthModifier;
 
 simulated function PostBeginPlay()
 {
-    Super(ZombieStalker).PostBeginPlay();
+    Super.PostBeginPlay();
 
     SetTimer(1, false);
 }
@@ -25,37 +25,38 @@ function Timer()
     }
 }
 
-simulated function int AttackAndMoveDoAnimAction(name AnimName)
+/** 
+ * Unused MeleeClaw2 animation added
+ * Attack animation rate increased
+ * Chaingun attacks handling disabled
+ */
+simulated function int DoAnimAction(name AnimName)
 {
-    local int meleeAnimIndex;
-    local float AnimDuration;
-
-    if (AnimName == 'ClawAndMove') 
-    {
-        meleeAnimIndex = Rand(3);
-        AnimName = MeleeAnims[meleeAnimIndex];
-        CurrentDamtype = ZombieDamType[meleeAnimIndex];
-    }
+    local float AnimRate;
 
     if (
-        AnimName == MeleeAnims[0] || 
-        AnimName == MeleeAnims[1] || 
-        AnimName == MeleeAnims[2]
-    ) {
-        AnimDuration = GetAnimDuration(AnimName);
+        AnimName == 'MeleeClaw' || 
+        AnimName == 'MeleeClaw2' || 
+        AnimName == 'MeleeImpale' || 
+        AnimName == 'transition')
+    {
+        AnimRate = 1.25;
 
-        /**
-         * Apply StalkerGlow effect before hit
-         * To emphasize pseudo/holographic nature of this ZED
-         */
-        bUnlit = true;
-        SetOverlayMaterial(Finalblend'KFX.StalkerGlow', AnimDuration, true);
-        SetTimer(AnimDuration, false);
-
-        AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
-        PlayAnim(AnimName,, 0.1, 1);
-
+        ApplyHolographicGlow(AnimName, AnimRate);
+        AnimBlendParams(1, 1.0, 0.0,, SpineBone1);
+        PlayAnim(AnimName, AnimRate, 0.1, 1);
+        
         return 1;
+    }
+    else if (AnimName == 'RadialAttack')
+    {
+        AnimRate = 1.25;
+
+        ApplyHolographicGlow(AnimName, AnimRate);
+        AnimBlendParams(1, 0.0);
+        PlayAnim(AnimName, AnimRate, 0.1);
+
+        return 0;
     }
 
     return Super(KFMonster).DoAnimAction(AnimName);
@@ -136,7 +137,7 @@ function PlayHit(
 
     /** 
      * Snippets responsible for blood splatter projectile spawn, damageFX and M79 achievement stats are removed
-     * As those are not needed for pseudo stalker hit/death handling
+     * As those are not needed for pseudo boss hit/death handling
      */
 }
 
@@ -163,7 +164,6 @@ simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
     FireState = FS_None;
 
     LifeSpan = RagdollLifeSpan;
-    LocalKFHumanPawn = None;
 
     Visibility = default.Visibility;
     bUnlit = true;
@@ -180,7 +180,7 @@ simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
     PlayDyingAnimation(DamageType, HitLoc);
 }
 
-simulated function CloakStalker()
+simulated function CloakBoss()
 {
     if (!bPlayedDeath)
     {
@@ -192,8 +192,8 @@ simulated function CloakStalker()
             return;
         }
 
-        Skins[0] = Shader'KF_Specimens_Trip_T.stalker_invisible';
-        Skins[1] = Shader'KF_Specimens_Trip_T.stalker_invisible';
+        Skins[0] = Shader'KF_Specimens_Trip_T.patriarch_invisible_gun';
+        Skins[1] = Shader'KF_Specimens_Trip_T.patriarch_invisible';
 
         // Invisible - no shadow
         if (PlayerShadow != None)
@@ -209,7 +209,38 @@ simulated function CloakStalker()
         // Remove/disallow projectors on invisible people
         Projectors.Remove(0, Projectors.Length);
         bAcceptsProjectors = false;
-        SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+    }
+}
+
+/** Disabled chaingun and rocket attacks */
+function RangedAttack(Actor A)
+{
+    if (bShotAnim)
+    {
+        return;
+    }
+
+    if (IsCloseEnuf(A))
+    {
+        bShotAnim = true;
+
+        if (Pawn(A) != None && FRand() < 0.5)
+        {
+            SetAnimAction('MeleeImpale');
+        }
+        else
+        {
+            SetAnimAction('MeleeClaw');
+        }
+    }
+    else if (bChargingPlayer)
+    {
+        return;
+    }
+    else if (!bChargingPlayer)
+    {
+        SetAnimAction('transition');
+        GoToState('Charging');
     }
 }
 
@@ -217,11 +248,6 @@ simulated function Tick(float DeltaTime)
 {
     local PlayerController P;
     local float DistSquared;
-    local bool bKeepAccelerationWhileAttacking;
-
-    bKeepAccelerationWhileAttacking = LookTarget != None && bShotAnim && !bWaitForAnim;
-
-    /** BEGIN: KFMonster.Tick */
 
     // If we've flagged this character to be destroyed next tick, handle that
     if (bDestroyNextTick && TimeSetDestroyNextTickTime < Level.TimeSeconds)
@@ -317,28 +343,26 @@ simulated function Tick(float DeltaTime)
         LookTarget = Controller.Enemy;
     }
 
-    // Removed code responsible for burning/zapped behaviour
-
-    /** END: KFMonster.Tick */
-
     if (Level.NetMode != NM_DedicatedServer && !bCloaked) 
     {   
-        CloakStalker();
-    }
-
-    if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking) 
-    {
-        Acceleration = AccelRate * Normal(LookTarget.Location - Location);
+        CloakBoss();
     }
 }
 
-function TakeFireDamage(int Damage, Pawn Instigator)
+/**
+ * Apply StalkerGlow effect before hit
+ * To emphasize pseudo/holographic nature of this ZED
+ */
+function ApplyHolographicGlow(name AnimName, optional float Rate)
 {
-    local Vector DummyHitLoc, DummyMomentum;
-    TakeDamage(Damage, BurnInstigator, DummyHitLoc, DummyMomentum, FireDamageClass);
+    local float AnimDuration;
+    AnimDuration = GetAnimDuration(AnimName, Rate);
+
+    bUnlit = true;
+    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', AnimDuration, true);
+    SetTimer(AnimDuration, false);
 }
 
-/** Ragdoll gets destroyed almost instantly */
 state ZombieDying
 {
 Begin:
@@ -375,7 +399,7 @@ function float NumPlayersHeadHealthModifer()
  ********************************************/
 
 /** Always cloaked */
-simulated function UnCloakStalker() {}
+simulated function UnCloakBoss() {}
 
 /** No hit effects */
 simulated function ProcessHitFX() {}
@@ -402,9 +426,9 @@ simulated function SetBurningBehavior() {}
 simulated function UnSetBurningBehavior() {}
 simulated function ZombieCrispUp() {}
 
-defaultProperties
+defaultproperties
 {
-    MenuName="N7 Pseudo Stalker"
+    MenuName="N7 Pseudo Patriarch"
     ScoringValue=0
     Health=5
     HeadHealth=5

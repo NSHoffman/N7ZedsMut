@@ -2,6 +2,7 @@ class N7_Boss extends KFChar.ZombieBoss_STANDARD;
 
 /**
  * @param bCanKite          - Whether players are allowed to exploit kiting 
+ * @param bSpawnProjections = Whether patriarch's pseudos should be spawned after healing
  * @param CGShots           - Fixed number of chaingun shots
  * @param CGFireRate        - Chaingun velocity
  * @param RLShots           - Fixed number of rockets to be shot
@@ -9,7 +10,7 @@ class N7_Boss extends KFChar.ZombieBoss_STANDARD;
  */
 struct CombatStage
 {
-    var bool bCanKite;
+    var bool bCanKite, bSpawnProjections;
     var byte CGShots, RLShots;
     var float CGFireRate, RLFireRate;
 };
@@ -17,6 +18,17 @@ struct CombatStage
 var CombatStage CombatStages[4];
 
 var byte MissileShotsLeft;
+
+/**
+ * Each patriarch has a chance to spawn
+ * a squad of pseudos, projections
+ * that get killed if the host is dead
+ */
+var Class<N7_Boss> PseudoClass;
+var Array<N7_Boss> PseudoSquad;
+
+var int MinPseudoSquadSize;
+var int MaxPseudoSquadSize;
 
 simulated function bool HitCanInterruptAction()
 {
@@ -38,7 +50,7 @@ simulated event SetAnimAction(name NewAction)
 
     if (Controller != None)
     {
-       BossZombieController(Controller).AnimWaitChannel = ExpectingChannel;
+        BossZombieController(Controller).AnimWaitChannel = ExpectingChannel;
     }
 
     if (AnimNeedsWait(NewAction))
@@ -58,9 +70,13 @@ simulated event SetAnimAction(name NewAction)
     }
 }
 
+/** 
+ * Unused MeleeClaw2 animation added
+ * Attack animation rate increased
+ * Moving chaingun attack animation
+ */
 simulated function int DoAnimAction(name AnimName)
 {
-    // Unused MeleeClaw2 animation added
     if (
         AnimName == 'MeleeClaw' || 
         AnimName == 'MeleeClaw2' || 
@@ -68,21 +84,22 @@ simulated function int DoAnimAction(name AnimName)
         AnimName == 'transition')
     {
         AnimBlendParams(1, 1.0, 0.0,, SpineBone1);
-        PlayAnim(AnimName,, 0.1, 1);
+        PlayAnim(AnimName, 1.25, 0.1, 1);
         
         return 1;
     }
     else if (AnimName == 'RadialAttack')
     {
         AnimBlendParams(1, 0.0);
-        PlayAnim(AnimName,, 0.1);
+        PlayAnim(AnimName, 1.25, 0.1);
+
         return 0;
     }
-    // Animation blending for moving chaingun attack
     else if (AnimName == 'FireMG')
     {
         AnimBlendParams(1, 1.0, 0.0,, FireRootBone, true);
         PlayAnim(AnimName,, 0.f, 1);
+
         return 1;
     }
     else if (AnimName == 'FireEndMG')
@@ -90,7 +107,7 @@ simulated function int DoAnimAction(name AnimName)
         AnimBlendParams(1, 0);
     }
 
-    Return Super.DoAnimAction(AnimName);
+    return Super(KFMonster).DoAnimAction(AnimName);
 }
 
 simulated function CloakBoss()
@@ -106,8 +123,11 @@ simulated function CloakBoss()
     if (bSpotted)
     {
         Visibility = 120;
+
         if (Level.NetMode == NM_DedicatedServer)
+        {
             return;
+        }
 
         Skins[0] = Finalblend'KFX.StalkerGlow';
         Skins[1] = Finalblend'KFX.StalkerGlow';
@@ -122,19 +142,25 @@ simulated function CloakBoss()
         for (C = Level.ControllerList; C != None; C = C.NextController)
         {
             if (C.bIsPlayer && C.Enemy == Self)
+            {
                 C.Enemy = None;
+            }
         }
     }
 
     if (Level.NetMode == NM_DedicatedServer)
+    {
         return;
+    }
 
     Skins[0] = Shader'KF_Specimens_Trip_N7.patriarch_invisible_gun';
     Skins[1] = Shader'KF_Specimens_Trip_N7.patriarch_invisible';
 
     // Invisible - no shadow
     if (PlayerShadow != None)
+    {
         PlayerShadow.bShadowActive = false;
+    }
 
     // Remove/disallow projectors on invisible people
     Projectors.Remove(0, Projectors.Length);
@@ -206,10 +232,10 @@ function RangedAttack(Actor A)
     {
         return;
     }
+    // Charge distance increased + charge cooldown decreased
     else if (
-        !bDesireChainGun && !bChargingPlayer && 
-        (D < 300 || (D < 700 && bOnlyE)) &&
-        // Charge cooldown shortened
+        !bDesireChainGun && !bChargingPlayer &&
+        (D < 700 || (D < 1500 && bOnlyE)) &&
         (Level.TimeSeconds - LastChargeTime > (3.5 + 3.0 * FRand())))
     {
         SetAnimAction('transition');
@@ -263,7 +289,7 @@ function DoorAttack(Actor A)
     {
         Controller.Target = A;
         bShotAnim = true;
-        Acceleration = vect(0,0,0);
+        Acceleration = vect(0, 0, 0);
 
         // Melee attack is used to break doors
         HandleWaitForAnim('MeleeImpale');
@@ -363,6 +389,66 @@ function ClawDamageTarget()
     }
 }
 
+function SpawnPseudoSquad()
+{
+    local int PseudoSquadSize, i;
+    local N7_Boss CurrentPseudoBoss;
+
+    PseudoSquadSize = MinPseudoSquadSize + Rand(MaxPseudoSquadSize - MinPseudoSquadSize + 1);
+
+    for (i = 0; i < PseudoSquadSize; i++)
+    {
+        CurrentPseudoBoss = Spawn(PseudoClass);
+
+        if (CurrentPseudoBoss != None)
+        {
+            PseudoSquad[i] = CurrentPseudoBoss;
+        }
+    }
+}
+
+function KillPseudoSquad()
+{
+    local int i;
+
+    for (i = 0; i < PseudoSquad.Length; i++)
+    {
+        if (PseudoSquad[i] != None)
+        {
+            PseudoSquad[i].Died(LastDamagedBy.Controller, LastDamagedByType, Location);
+            PseudoSquad[i] = None;
+        }
+    }
+
+    PseudoSquad.Length = 0;
+}
+
+simulated function NotifySyringeC()
+{
+    Super.NotifySyringeC();
+
+    if (CombatStages[SyringeCount].bSpawnProjections)
+    {
+        SpawnPseudoSquad();
+    }
+}
+
+simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
+{
+    Super.PlayDying(DamageType, HitLoc);
+
+    KillPseudoSquad();
+
+    if (bUnlit)
+        bUnlit = !bUnlit;
+
+    if (!bCrispified)
+    {
+        Skins[0] = default.Skins[0];
+        Skins[1] = default.Skins[1];
+    }
+}
+
 /** God mode + invisibility when escaping */
 state Escaping
 {
@@ -393,10 +479,7 @@ ignores RangedAttack;
         optional int HitIndex)
     {
         // Only Commando can damage Patriarch in invisible state
-        if (
-            KFHumanPawn(InstigatedBy) != None && 
-            KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo) != None &&
-            KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo).ClientVeteranSkill == Class'KFVetCommando')
+        if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
         {
             Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
@@ -443,10 +526,7 @@ ignores RangedAttack;
         optional int HitIndex)
     {
         // Only Commando can damage Patriarch in invisible state
-        if (
-            KFHumanPawn(InstigatedBy) != None && 
-            KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo) != None &&
-            KFPlayerReplicationInfo(InstigatedBy.PlayerReplicationInfo).ClientVeteranSkill == Class'KFVetCommando')
+        if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
         {
             Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
@@ -620,14 +700,18 @@ NextShot:
 defaultproperties 
 {
     MenuName="N7 Patriarch"
-    CombatStages(0)=(bCanKite=true,CGShots=75,RLShots=1,CGFireRate=0.05,RLFireRate=0.75)
-    CombatStages(1)=(bCanKite=false,CGShots=100,RLShots=1,CGFireRate=0.04,RLFireRate=0.75)
-    CombatStages(2)=(bCanKite=false,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.5)
-    CombatStages(3)=(bCanKite=false,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.25)
-    ImpaleMeleeDamageRange=110.000000 // Impale attack had way too little damage range (45)
+    CombatStages(0)=(bCanKite=true,bSpawnProjections=false,CGShots=75,RLShots=1,CGFireRate=0.05,RLFireRate=0.75)
+    CombatStages(1)=(bCanKite=false,bSpawnProjections=false,CGShots=100,RLShots=1,CGFireRate=0.04,RLFireRate=0.75)
+    CombatStages(2)=(bCanKite=false,bSpawnProjections=false,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.5)
+    CombatStages(3)=(bCanKite=false,bSpawnProjections=true,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.25)
+    ClawMeleeDamageRange=75 // Claw damage range seemed a little too much
+    ImpaleMeleeDamageRange=100.000000 // Impale attack had way too little damage range (45)
     ZappedDamageMod=1.00
     ZapResistanceScale=2.0
     ZappedSpeedMod=0.8
+    MinPseudoSquadSize=2
+    MaxPseudoSquadSize=5
+    PseudoClass=Class'N7ZedsMut.N7_PseudoBoss'
     DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmPatriarch'
     DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegPatriarch'
     DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadPatriarch'

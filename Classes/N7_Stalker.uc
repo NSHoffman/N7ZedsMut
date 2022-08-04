@@ -2,22 +2,21 @@ class N7_Stalker extends KFChar.ZombieStalker_STANDARD;
 
 /**
  * Each stalker has a chance to spawn
- * a squad of pseudo stalkers, projections
- * that get killed if the host stalker is dead
+ * a squad of pseudos, projections
+ * that get killed if the host is dead
  */
-var Class<N7_Stalker> PseudoStalkerClass;
-var Array<N7_Stalker> PseudoStalkersSquad;
+var Class<N7_Stalker> PseudoClass;
+var Array<N7_Stalker> PseudoSquad;
 
+var int MinPseudoSquadSize;
 var int MaxPseudoSquadSize;
 
 /** Spawning pseudo stalkers squad */
 simulated function PostBeginPlay()
 {
-    local int PseudoSquadSize;
-    PseudoSquadSize = Rand(MaxPseudoSquadSize + 1);
-
     Super.PostBeginPlay();
-    SpawnPseudoSquad(PseudoSquadSize);
+
+    SpawnPseudoSquad();
 }
 
 /* Don't interrupt stalker when she's trying to attack */
@@ -144,18 +143,20 @@ function RangedAttack(Actor A)
     }
 }
 
-function SpawnPseudoSquad(int PseudoSquadSize)
+function SpawnPseudoSquad()
 {
-    local int i;
+    local int PseudoSquadSize, i;
     local N7_Stalker CurrentPseudoStalker;
+
+    PseudoSquadSize = MinPseudoSquadSize + Rand(MaxPseudoSquadSize - MinPseudoSquadSize + 1);
 
     for (i = 0; i < PseudoSquadSize; i++)
     {
-        CurrentPseudoStalker = Spawn(PseudoStalkerClass);
+        CurrentPseudoStalker = Spawn(PseudoClass);
 
         if (CurrentPseudoStalker != None)
         {
-            PseudoStalkersSquad[i] = CurrentPseudoStalker;
+            PseudoSquad[i] = CurrentPseudoStalker;
         }
     }
 }
@@ -164,16 +165,16 @@ function KillPseudoSquad()
 {
     local int i;
 
-    for (i = 0; i < PseudoStalkersSquad.Length; i++)
+    for (i = 0; i < PseudoSquad.Length; i++)
     {
-        if (PseudoStalkersSquad[i] != None)
+        if (PseudoSquad[i] != None)
         {
-            PseudoStalkersSquad[i].Died(LastDamagedBy.Controller, LastDamagedByType, Location);
-            PseudoStalkersSquad[i] = None;
+            PseudoSquad[i].Died(LastDamagedBy.Controller, LastDamagedByType, Location);
+            PseudoSquad[i] = None;
         }
     }
 
-    PseudoStalkersSquad.Length = 0;
+    PseudoSquad.Length = 0;
 }
 
 /** 
@@ -333,8 +334,9 @@ defaultProperties
     MenuName="N7 Stalker"
     GroundSpeed=210.000000
     WaterSpeed=190.000000
-    MaxPseudoSquadSize=3;
-    PseudoStalkerClass=Class'N7ZedsMut.N7_PseudoStalker'
+    MinPseudoSquadSize=0
+    MaxPseudoSquadSize=3
+    PseudoClass=Class'N7ZedsMut.N7_PseudoStalker'
     DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmStalker'
     DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegStalker'
     DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadStalker'

@@ -2,9 +2,10 @@ class N7_Scrake extends KFChar.ZombieScrake_STANDARD;
 
 var float ChargeGroundSpeed;
 
-event PostBeginPlay()
+simulated event PostBeginPlay()
 {
     Super(KFMonster).PostBeginPlay();
+
     ChargeGroundSpeed = OriginalGroundSpeed * AttackChargeRate;
 }
 

@@ -4,9 +4,10 @@ var const int RageDistance;
 var const float ChargeSpeedModifier;
 var float ChargeGroundSpeed;
 
-event PostBeginPlay()
+simulated event PostBeginPlay()
 {
     Super(KFMonster).PostBeginPlay();
+
     ChargeGroundSpeed = OriginalGroundSpeed * ChargeSpeedModifier;
 }
 

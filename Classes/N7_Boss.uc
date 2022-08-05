@@ -82,12 +82,12 @@ simulated event SetAnimAction(name NewAction)
 
 simulated function bool AnimNeedsWait(name TestAnim)
 {
-	if (TestAnim == 'FireMG')
+    if (TestAnim == 'FireMG')
     {
-		return !bMovingChaingunAttack;
+        return !bMovingChaingunAttack;
     }
 
-	return Super.AnimNeedsWait(TestAnim);
+    return Super.AnimNeedsWait(TestAnim);
 }
 
 /** 
@@ -132,27 +132,27 @@ simulated function int DoAnimAction(name AnimName)
 
 simulated function AnimEnd(int Channel)
 {
-	local name Sequence;
-	local float Frame, Rate;
+    local name Sequence;
+    local float Frame, Rate;
 
-	if (Level.NetMode == NM_Client && bMinigunning)
-	{
-		GetAnimParams(Channel, Sequence, Frame, Rate);
+    if (Level.NetMode == NM_Client && bMinigunning)
+    {
+        GetAnimParams(Channel, Sequence, Frame, Rate);
 
-		if (Sequence != 'PreFireMG' && Sequence != 'FireMG')
-		{
-			Super(KFMonster).AnimEnd(Channel);
-			return;
-		}
-
-		if (bMovingChaingunAttack) {
-			DoAnimAction('FireMG');
+        if (Sequence != 'PreFireMG' && Sequence != 'FireMG')
+        {
+            Super(KFMonster).AnimEnd(Channel);
+            return;
         }
-	}
-	else
-	{
-		Super(KFMonster).AnimEnd(Channel);
-	}
+
+        if (bMovingChaingunAttack) {
+            DoAnimAction('FireMG');
+        }
+    }
+    else
+    {
+        Super(KFMonster).AnimEnd(Channel);
+    }
 }
 
 simulated function CloakBoss()
@@ -516,24 +516,24 @@ function ChargeTargetAfterHealing()
 /** Don't drop needle on this stage */
 simulated function NotifySyringeA()
 {
-	if (Level.NetMode != NM_Client)
-	{
-		if (SyringeCount < 3)
+    if (Level.NetMode != NM_Client)
+    {
+        if (SyringeCount < 3)
         {
-			SyringeCount++;
+            SyringeCount++;
         }
-		if (Level.NetMode != NM_DedicatedServer)
+        if (Level.NetMode != NM_DedicatedServer)
         {
-			PostNetReceive();
+            PostNetReceive();
         }
-	}
+    }
 }
 
 /** Spawn pseudo squad after the last healing stage */
 simulated function NotifySyringeC()
 {
     if (Level.NetMode != NM_DedicatedServer)
-	{
+    {
         CurrentNeedle = Spawn(Class'BossHPNeedle');
 
         if (CurrentNeedle != None)
@@ -542,7 +542,7 @@ simulated function NotifySyringeC()
             CurrentNeedle.Velocity = vect(-45,300,-90) >> Rotation;
             DropNeedle();
         }
-	}
+    }
 
     if (CombatStages[SyringeCount].bSpawnProjections)
     {
@@ -649,9 +649,9 @@ ignores RangedAttack;
         }
     }
 Begin:
-	Sleep(GetAnimDuration('Heal'));
+    Sleep(GetAnimDuration('Heal'));
 
-	ChargeTargetAfterHealing();
+    ChargeTargetAfterHealing();
 }
 
 /** 
@@ -719,7 +719,7 @@ Begin:
     {
         if (!bMovingChaingunAttack)
         {
-			Acceleration = vect(0, 0, 0);
+            Acceleration = vect(0, 0, 0);
         }
 
         if (MGFireCounter <= 0 || (MGLostSightTimeout > 0 && Level.TimeSeconds > MGLostSightTimeout))

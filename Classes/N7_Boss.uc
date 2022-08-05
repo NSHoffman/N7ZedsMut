@@ -30,6 +30,14 @@ var Array<N7_Boss> PseudoSquad;
 var int MinPseudoSquadSize;
 var int MaxPseudoSquadSize;
 
+var bool bMovingChaingunAttack;
+
+replication
+{
+    reliable if (ROLE == ROLE_AUTHORITY)
+        bMovingChaingunAttack;
+}
+
 simulated function bool HitCanInterruptAction()
 {
     return !bWaitForAnim && !bShotAnim;
@@ -38,7 +46,9 @@ simulated function bool HitCanInterruptAction()
 simulated event SetAnimAction(name NewAction)
 {
     if (NewAction == '')
+    {
         return;
+    }
 
     // 50% that Patriarch will use alternate claw animation
     if (NewAction == 'MeleeClaw' && FRand() > 0.5)
@@ -70,6 +80,16 @@ simulated event SetAnimAction(name NewAction)
     }
 }
 
+simulated function bool AnimNeedsWait(name TestAnim)
+{
+	if (TestAnim == 'FireMG')
+    {
+		return !bMovingChaingunAttack;
+    }
+
+	return Super.AnimNeedsWait(TestAnim);
+}
+
 /** 
  * Unused MeleeClaw2 animation added
  * Attack animation rate increased
@@ -95,7 +115,7 @@ simulated function int DoAnimAction(name AnimName)
 
         return 0;
     }
-    else if (AnimName == 'FireMG')
+    else if (AnimName == 'FireMG' && bMovingChaingunAttack)
     {
         AnimBlendParams(1, 1.0, 0.0,, FireRootBone, true);
         PlayAnim(AnimName,, 0.f, 1);
@@ -108,6 +128,31 @@ simulated function int DoAnimAction(name AnimName)
     }
 
     return Super(KFMonster).DoAnimAction(AnimName);
+}
+
+simulated function AnimEnd(int Channel)
+{
+	local name Sequence;
+	local float Frame, Rate;
+
+	if (Level.NetMode == NM_Client && bMinigunning)
+	{
+		GetAnimParams(Channel, Sequence, Frame, Rate);
+
+		if (Sequence != 'PreFireMG' && Sequence != 'FireMG')
+		{
+			Super(KFMonster).AnimEnd(Channel);
+			return;
+		}
+
+		if (bMovingChaingunAttack) {
+			DoAnimAction('FireMG');
+        }
+	}
+	else
+	{
+		Super(KFMonster).AnimEnd(Channel);
+	}
 }
 
 simulated function CloakBoss()
@@ -423,9 +468,81 @@ function KillPseudoSquad()
     PseudoSquad.Length = 0;
 }
 
+/** After healing patriarch might want to avenge damagers */
+function ChargeTargetAfterHealing()
+{
+    local Controller C;
+    local Pawn NextChargeTarget;
+    local bool bWantsToAvenge, bChooseWeakest, bWeakerTarget;
+
+    bWantsToAvenge = KFHumanPawn(LastDamagedBy) != None && KFHumanPawn(LastDamagedBy).Health > 0 && FRand() < 0.6;
+    bChooseWeakest = FRand() < 0.5;
+
+    if (bWantsToAvenge)
+    {
+        NextChargeTarget = LastDamagedBy;
+    }
+    else if (bChooseWeakest)
+    {
+        for (C = Level.ControllerList; C != None; C = C.NextController)
+        { 
+            if (C.IsA('PlayerController') || C.IsA('xBot'))
+            {
+                bWeakerTarget = 
+                    (NextChargeTarget == None && C.Pawn.Health > 0) || 
+                    (NextChargeTarget != None && C.Pawn.Health > 0 && C.Pawn.Health <= NextChargeTarget.Health);
+
+                if (bWeakerTarget)
+                {
+                    NextChargeTarget = C.Pawn;
+                }
+            } 
+        }
+    }
+
+    if (NextChargeTarget != None)
+    {
+        Controller.Target = NextChargeTarget;
+        Controller.Enemy = NextChargeTarget;
+
+        GoToState('Charging');
+    }
+    else 
+    {
+        GoToState('');
+    }
+}
+
+/** Don't drop needle on this stage */
+simulated function NotifySyringeA()
+{
+	if (Level.NetMode != NM_Client)
+	{
+		if (SyringeCount < 3)
+        {
+			SyringeCount++;
+        }
+		if (Level.NetMode != NM_DedicatedServer)
+        {
+			PostNetReceive();
+        }
+	}
+}
+
+/** Spawn pseudo squad after the last healing stage */
 simulated function NotifySyringeC()
 {
-    Super.NotifySyringeC();
+    if (Level.NetMode != NM_DedicatedServer)
+	{
+        CurrentNeedle = Spawn(Class'BossHPNeedle');
+
+        if (CurrentNeedle != None)
+        {
+            AttachToBone(CurrentNeedle,'Rpalm_MedAttachment');
+            CurrentNeedle.Velocity = vect(-45,300,-90) >> Rotation;
+            DropNeedle();
+        }
+	}
 
     if (CombatStages[SyringeCount].bSpawnProjections)
     {
@@ -531,6 +648,10 @@ ignores RangedAttack;
             Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
     }
+Begin:
+	Sleep(GetAnimDuration('Heal'));
+
+	ChargeTargetAfterHealing();
 }
 
 /** 
@@ -542,12 +663,14 @@ state FireChaingun
     function BeginState()
     {
         Super.BeginState();
+        bMovingChaingunAttack = true;
         bChargingPlayer = true;
         bCanStrafe = true;
     }
 
     function EndState()
     {
+        bMovingChaingunAttack = false;
         bChargingPlayer = false;
         bCanStrafe = false;
         Super.EndState();
@@ -577,7 +700,7 @@ state FireChaingun
             HandleWaitForAnim('FireEndMG');
             GoToState('');
         }
-        else
+        else if (bMovingChaingunAttack)
         {
             if (bFireAtWill && Channel != 1)
                 return;
@@ -594,6 +717,11 @@ state FireChaingun
 Begin:
     while (true)
     {
+        if (!bMovingChaingunAttack)
+        {
+			Acceleration = vect(0, 0, 0);
+        }
+
         if (MGFireCounter <= 0 || (MGLostSightTimeout > 0 && Level.TimeSeconds > MGLostSightTimeout))
         {
             bShotAnim = true;

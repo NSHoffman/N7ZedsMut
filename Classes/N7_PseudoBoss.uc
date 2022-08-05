@@ -42,7 +42,10 @@ simulated function int DoAnimAction(name AnimName)
     {
         AnimRate = 1.25;
 
-        ApplyHolographicGlow(AnimName, AnimRate);
+        if (AnimName != 'transition')
+        {
+            ApplyHolographicGlow(AnimName, AnimRate);
+        }
         AnimBlendParams(1, 1.0, 0.0,, SpineBone1);
         PlayAnim(AnimName, AnimRate, 0.1, 1);
         
@@ -139,6 +142,15 @@ function PlayHit(
      * Snippets responsible for blood splatter projectile spawn, damageFX and M79 achievement stats are removed
      * As those are not needed for pseudo boss hit/death handling
      */
+}
+
+/** Get rid of slomo and endgame state transition */
+function Died(
+    Controller Killer, 
+    Class<DamageType> DamageType, 
+    Vector HitLocation)
+{
+    Super(KFMonster).Died(Killer, DamageType, HitLocation);
 }
 
 simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)

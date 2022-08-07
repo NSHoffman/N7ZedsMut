@@ -4,22 +4,23 @@ var const int RageDistance;
 var const float ChargeSpeedModifier;
 var float ChargeGroundSpeed;
 
-event PostBeginPlay()
+simulated event PostBeginPlay()
 {
     Super(KFMonster).PostBeginPlay();
+
     ChargeGroundSpeed = OriginalGroundSpeed * ChargeSpeedModifier;
 }
 
 function RangedAttack(Actor A)
 {
-	Super(KFMonster).RangedAttack(A);
+    Super(KFMonster).RangedAttack(A);
 
-	if (
+    if (
         !bShotAnim && 
         !bDecapitated && 
         VSize(A.Location - Location) <= RageDistance
     ) {
-		GoToState('RunningState');
+        GoToState('RunningState');
     }
 }
 
@@ -54,9 +55,9 @@ state RunningState
         bKeepAccelerationWhileAttacking = LookTarget != None && bShotAnim && !bWaitForAnim;
 
         CheckAnimationAndGroundSpeed();
-    	if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking)
+        if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking)
         {
-    		Acceleration = AccelRate * Normal(LookTarget.Location - Location);
+            Acceleration = AccelRate * Normal(LookTarget.Location - Location);
         }
 
         Global.Tick(DeltaTime);
@@ -93,6 +94,13 @@ CheckCharge:
     }
 }
 
+static simulated function PreCacheMaterials(LevelInfo myLevel)
+{
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.gorefast_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.gorefast_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.gorefast_diff');
+}
+
 defaultProperties
 {
     MenuName="N7 Gorefast"
@@ -100,4 +108,8 @@ defaultProperties
     GroundSpeed=140.000000
     RageDistance=1000
     ControllerClass=Class'N7ZedsMut.N7_GorefastController'
+    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmGorefast'
+    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegGorefast'
+    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadGorefast'
+    Skins(0)=Combiner'KF_Specimens_Trip_N7.gorefast_cmb'
 }

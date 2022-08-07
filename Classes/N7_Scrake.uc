@@ -2,28 +2,29 @@ class N7_Scrake extends KFChar.ZombieScrake_STANDARD;
 
 var float ChargeGroundSpeed;
 
-event PostBeginPlay()
+simulated event PostBeginPlay()
 {
     Super(KFMonster).PostBeginPlay();
+
     ChargeGroundSpeed = OriginalGroundSpeed * AttackChargeRate;
 }
 
 function RangedAttack(Actor A)
 {
-	if (bShotAnim || Physics == PHYS_Swimming)
-		return;
-	else if (CanAttack(A))
-	{
-		bShotAnim = true;
-		SetAnimAction(MeleeAnims[Rand(2)]);
-		CurrentDamType = ZombieDamType[0];
-		GoToState('SawingLoop');
-	}
+    if (bShotAnim || Physics == PHYS_Swimming)
+        return;
+    else if (CanAttack(A))
+    {
+        bShotAnim = true;
+        SetAnimAction(MeleeAnims[Rand(2)]);
+        CurrentDamType = ZombieDamType[0];
+        GoToState('SawingLoop');
+    }
 
-	if (!bDecapitated && Controller.Enemy != None)
-	{
+    if (!bDecapitated && Controller.Enemy != None)
+    {
         GotoState('RunningState');
-	}
+    }
 }
 
 state RunningState
@@ -50,8 +51,23 @@ state RunningState
     }
 }
 
+static simulated function PreCacheMaterials(LevelInfo myLevel)
+{
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_N7.scrake_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.scrake_diff');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.scrake_spec');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.scrake_saw_panner');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_N7.scrake_FB');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.Chainsaw_blade_diff');
+}
+
 defaultProperties
 {
     MenuName="N7 Scrake"
     AttackChargeRate=3.500000
+    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmScrake'
+    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegScrake'
+    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadScrake'
+    Skins(0)=Shader'KF_Specimens_Trip_N7.scrake_FB'
+    Skins(1)=TexPanner'KF_Specimens_Trip_N7.scrake_saw_panner'
 }

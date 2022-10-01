@@ -416,7 +416,7 @@ simulated function UnCloakBoss() {}
 /** No hit effects */
 simulated function ProcessHitFX() {}
 
-/** No gibs */
+/** No gibs and blood stains */
 event KImpact(Actor Other, Vector Pos, Vector ImpactVel, Vector ImpactNorm) {}
 
 simulated function HideBone(name BoneName) {}

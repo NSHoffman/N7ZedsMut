@@ -209,7 +209,6 @@ simulated function CloakStalker()
         // Remove/disallow projectors on invisible people
         Projectors.Remove(0, Projectors.Length);
         bAcceptsProjectors = false;
-        SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
     }
 }
 
@@ -380,7 +379,7 @@ simulated function UnCloakStalker() {}
 /** No hit effects */
 simulated function ProcessHitFX() {}
 
-/** No gibs */
+/** No gibs and blood stains */
 event KImpact(Actor Other, Vector Pos, Vector ImpactVel, Vector ImpactNorm) {}
 
 simulated function HideBone(name BoneName) {}

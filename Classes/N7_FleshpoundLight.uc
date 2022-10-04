@@ -5,12 +5,12 @@ function ChangeToRed() {
 }
 
 function ChangeToYellow() {
-    LightHue = 32;
+    LightHue = 36;
 }
 
 defaultproperties
 {
-     LightHue=32
+     LightHue=36
      LightSaturation=0
      LightBrightness=255.00000
      LightRadius=3.000000

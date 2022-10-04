@@ -1,5 +1,14 @@
 class N7_BossLAWProj extends BossLAWProj;
 
+#exec obj load file="KF_LAWSnd.uax"
+#exec obj load file="KillingFloorStatics.usx"
+
+static function PreloadAssets();
+static function bool UnloadAssets()
+{
+	return true;
+}
+
 /** Removed damage reduction when there's only one player */
 simulated function PostBeginPlay()
 {
@@ -63,4 +72,9 @@ simulated function HitWall(vector HitNormal, actor Wall)
     Super(Projectile).HitWall(HitNormal, Wall);
 }
 
-defaultproperties {}
+defaultproperties 
+{
+    ExplosionSound=SoundGroup'KF_LAWSnd.Rocket_Explode'
+    StaticMesh=StaticMesh'KillingFloorStatics.LAWRocket'
+    AmbientSound=Sound'KF_LAWSnd.Rocket_Propel'
+}

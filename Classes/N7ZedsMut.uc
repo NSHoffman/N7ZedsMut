@@ -48,20 +48,20 @@ static function FillPlayInfo(PlayInfo PlayInfo)
     local string N7ZedsConfig;
 
     N7ZedsConfig = "N7 Zeds Mutator Config";
-    Super.FillPlayInfo(PlayInfo);
+    super.FillPlayInfo(PlayInfo);
 
     PlayInfo.AddSetting(N7ZedsConfig, "bEnableAutoReplacement", "Enable ZEDs replacement", 0, 0, "Check");
 
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceClot", "Replace original Clots", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceCrawler", "Replace original Crawlers", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceGorefast", "Replace original Gorefasts", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceStalker", "Replace original Stalkers", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceScrake", "Replace original Scrakes", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceFleshpound", "Replace original Fleshpounds", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceBloat", "Replace original Bloats", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceSiren", "Replace original Sirens", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceHusk", "Replace original Husks", 0, 0, "Check",,,, true);
-    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceBoss", "Replace original Boss", 0, 0, "Check",,,, true);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceClot", "Replace original Clots", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceCrawler", "Replace original Crawlers", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceGorefast", "Replace original Gorefasts", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceStalker", "Replace original Stalkers", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceScrake", "Replace original Scrakes", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceFleshpound", "Replace original Fleshpounds", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceBloat", "Replace original Bloats", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceSiren", "Replace original Sirens", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceHusk", "Replace original Husks", 0, 0, "Check",,,, True);
+    PlayInfo.AddSetting(N7ZedsConfig, "bReplaceBoss", "Replace original Boss", 0, 0, "Check",,,, True);
 }
 
 static event string GetDescriptionText(string Property) 
@@ -80,7 +80,7 @@ static event string GetDescriptionText(string Property)
         case "bReplaceHusk"             : return "Replace original Husks";
         case "bReplaceBoss"             : return "Replace original Boss";
 
-        default                         : return Super.GetDescriptionText(Property);
+        default                         : return super.GetDescriptionText(Property);
     }
 }
 
@@ -99,7 +99,7 @@ function bool ShouldReplaceZED(string ZedClass)
         case "N7ZedsMut.N7_Husk"        : return bReplaceHusk;
         case "N7ZedsMut.N7_Boss"        : return bReplaceBoss;
 
-        default                         : return false;
+        default                         : return False;
     }
 }
 
@@ -228,16 +228,16 @@ defaultproperties
     InitialMonstersCollection=Class'KFMod.KFMonstersCollection'
     N7MonstersCollection=Class'N7ZedsMut.N7_MonstersCollection'
     
-    bEnableAutoReplacement=true
+    bEnableAutoReplacement=True
 
-    bReplaceClot=true
-    bReplaceCrawler=true
-    bReplaceGorefast=true
-    bReplaceStalker=true
-    bReplaceScrake=true
-    bReplaceFleshpound=true
-    bReplaceBloat=true
-    bReplaceSiren=true
-    bReplaceHusk=true
-    bReplaceBoss=true
+    bReplaceClot=True
+    bReplaceCrawler=True
+    bReplaceGorefast=True
+    bReplaceStalker=True
+    bReplaceScrake=True
+    bReplaceFleshpound=True
+    bReplaceBloat=True
+    bReplaceSiren=True
+    bReplaceHusk=True
+    bReplaceBoss=True
 }

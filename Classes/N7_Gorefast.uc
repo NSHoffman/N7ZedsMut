@@ -6,14 +6,14 @@ var float ChargeGroundSpeed;
 
 simulated event PostBeginPlay()
 {
-    Super(KFMonster).PostBeginPlay();
+    super(KFMonster).PostBeginPlay();
 
     ChargeGroundSpeed = OriginalGroundSpeed * ChargeSpeedModifier;
 }
 
 function RangedAttack(Actor A)
 {
-    Super(KFMonster).RangedAttack(A);
+    super(KFMonster).RangedAttack(A);
 
     if (
         !bShotAnim && 
@@ -28,7 +28,7 @@ state RunningState
 {
     function bool CanSpeedAdjust()
     {
-        return false;
+        return False;
     }
 
     function RangedAttack(Actor A)
@@ -38,7 +38,7 @@ state RunningState
 
         if (bDoRangedAttack)
         {
-            bShotAnim = true;
+            bShotAnim = True;
             SetAnimAction('ClawAndMove');
         }
     }
@@ -60,7 +60,7 @@ state RunningState
             Acceleration = AccelRate * Normal(LookTarget.Location - Location);
         }
 
-        Global.Tick(DeltaTime);
+        global.Tick(DeltaTime);
     }
 
     /**

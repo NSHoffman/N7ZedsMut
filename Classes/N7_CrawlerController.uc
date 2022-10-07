@@ -13,7 +13,7 @@ function bool FireWeaponAt(Actor A)
     }
     
     if ((A == None) || (Focus != A)) {
-        return false;
+        return False;
     }
 
     if (CanAttack(A)) {
@@ -39,7 +39,7 @@ function bool FireWeaponAt(Actor A)
             }
         }
     }
-    return false;
+    return False;
 }
 
 defaultProperties {}

@@ -8,7 +8,7 @@ state RageCharging
     {
         if (!bZapped) 
         {
-            bChargingPlayer = true;
+            bChargingPlayer = True;
 
             if (Level.NetMode != NM_DedicatedServer)
             {
@@ -36,13 +36,13 @@ state RageCharging
             Acceleration = AccelRate * Normal(LookTarget.Location - Location);
         }
 
-        Global.Tick(DeltaTime);
+        global.Tick(DeltaTime);
     }
 
     // Even hitting a target won't settle raged FP down
     function bool MeleeDamageTarget(int hitdamage, vector pushdir)
     {
-        return Super(KFMonster).MeleeDamageTarget(hitdamage * 1.75, pushdir * 3);
+        return super(KFMonster).MeleeDamageTarget(hitdamage * 1.75, pushdir * 3);
     }
 }
 
@@ -68,7 +68,7 @@ state ChargeToMarker {
             Acceleration = AccelRate * Normal(LookTarget.Location - Location);
         }
 
-        Global.Tick(DeltaTime);
+        global.Tick(DeltaTime);
     }
 }
 

@@ -4,7 +4,7 @@ var float ChargeGroundSpeed;
 
 simulated event PostBeginPlay()
 {
-    Super(KFMonster).PostBeginPlay();
+    super(KFMonster).PostBeginPlay();
 
     ChargeGroundSpeed = OriginalGroundSpeed * AttackChargeRate;
 }
@@ -15,7 +15,7 @@ function RangedAttack(Actor A)
         return;
     else if (CanAttack(A))
     {
-        bShotAnim = true;
+        bShotAnim = True;
         SetAnimAction(MeleeAnims[Rand(2)]);
         CurrentDamType = ZombieDamType[0];
         GoToState('SawingLoop');
@@ -32,7 +32,7 @@ state RunningState
     simulated function Tick(float DeltaTime)
     {
         CheckAnimationAndGroundSpeed();
-        Super.Tick(DeltaTime);
+        super.Tick(DeltaTime);
     }
 
     /**

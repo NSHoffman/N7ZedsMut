@@ -102,17 +102,17 @@ simulated event SetAnimAction(name NewAction)
 
     if (AnimNeedsWait(NewAction))
     {
-        bWaitForAnim = true;
+        bWaitForAnim = True;
     }
     else
     {
-        bWaitForAnim = false;
+        bWaitForAnim = False;
     }
 
     if (Level.NetMode != NM_Client)
     {
         AnimAction = NewAction;
-        bResetAnimAct = true;
+        bResetAnimAct = True;
         ResetAnimActTime = Level.TimeSeconds + 0.3;
     }
 }
@@ -124,7 +124,7 @@ simulated function bool AnimNeedsWait(name TestAnim)
         return !bMovingChaingunAttack;
     }
 
-    return Super.AnimNeedsWait(TestAnim);
+    return super.AnimNeedsWait(TestAnim);
 }
 
 /**
@@ -154,7 +154,7 @@ simulated function int DoAnimAction(name AnimName)
     }
     else if (AnimName == 'FireMG' && bMovingChaingunAttack)
     {
-        AnimBlendParams(1, 1.0, 0.0,, FireRootBone, true);
+        AnimBlendParams(1, 1.0, 0.0,, FireRootBone, True);
         PlayAnim(AnimName,, 0.f, 1);
 
         return 1;
@@ -164,7 +164,7 @@ simulated function int DoAnimAction(name AnimName)
         AnimBlendParams(1, 0);
     }
 
-    return Super(KFMonster).DoAnimAction(AnimName);
+    return super(KFMonster).DoAnimAction(AnimName);
 }
 
 simulated function AnimEnd(int Channel)
@@ -178,7 +178,7 @@ simulated function AnimEnd(int Channel)
 
         if (Sequence != 'PreFireMG' && Sequence != 'FireMG')
         {
-            Super(KFMonster).AnimEnd(Channel);
+            super(KFMonster).AnimEnd(Channel);
             return;
         }
 
@@ -188,7 +188,7 @@ simulated function AnimEnd(int Channel)
     }
     else
     {
-        Super(KFMonster).AnimEnd(Channel);
+        super(KFMonster).AnimEnd(Channel);
     }
 }
 
@@ -213,12 +213,12 @@ simulated function CloakBoss()
 
         Skins[0] = Finalblend'KFX.StalkerGlow';
         Skins[1] = Finalblend'KFX.StalkerGlow';
-        bUnlit = true;
+        bUnlit = True;
         return;
     }
 
     Visibility = 0;
-    bCloaked = true;
+    bCloaked = True;
     if (Level.NetMode != NM_Client)
     {
         for (C = Level.ControllerList; C != None; C = C.NextController)
@@ -240,10 +240,10 @@ simulated function CloakBoss()
 
     if (PlayerShadow != None)
     {
-        PlayerShadow.bShadowActive = false;
+        PlayerShadow.bShadowActive = False;
     }
     Projectors.Remove(0, Projectors.Length);
-    bAcceptsProjectors = false;
+    bAcceptsProjectors = False;
 
     if (FRand() < 0.10)
     {
@@ -266,8 +266,8 @@ simulated function CloakBoss()
 
 simulated function ZombieCrispDown()
 {
-    bAshen = false;
-    bCrispified = false;
+    bAshen = False;
+    bCrispified = False;
 
     UnSetBurningBehavior();
 
@@ -287,7 +287,7 @@ function RangedAttack(Actor A)
 
     if (Controller.LineOfSightTo(A) && FRand() < 0.15 && LastChainGunTime < Level.TimeSeconds)
     {
-        bDesireChainGun = true;
+        bDesireChainGun = True;
     }
 
     if (bShotAnim)
@@ -300,7 +300,7 @@ function RangedAttack(Actor A)
 
     if (IsCloseEnuf(A))
     {
-        bShotAnim = true;
+        bShotAnim = True;
 
         if (Health > 1500 && Pawn(A) != None && FRand() < 0.5)
         {
@@ -355,7 +355,7 @@ function RangedAttack(Actor A)
         }
         LastMissileTime = Level.TimeSeconds + 7.5 + FRand() * 10;
 
-        bShotAnim = true;
+        bShotAnim = True;
         Acceleration = vect(0, 0, 0);
 
         SetAnimAction('PreFireMissile');
@@ -373,7 +373,7 @@ function RangedAttack(Actor A)
         }
         LastChainGunTime = Level.TimeSeconds + 4 + FRand() * 6;
 
-        bShotAnim = true;
+        bShotAnim = True;
         Acceleration = vect(0, 0, 0);
 
         SetAnimAction('PreFireMG');
@@ -390,7 +390,7 @@ function DoorAttack(Actor A)
     if (!bShotAnim && A != None && Physics != PHYS_Swimming)
     {
         Controller.Target = A;
-        bShotAnim = true;
+        bShotAnim = True;
         Acceleration = vect(0, 0, 0);
 
         // Melee attack is used to break doors
@@ -417,7 +417,7 @@ function TakeDamage(
     if (KFMonster(InstigatedBy) == None)
     {
         OldHealth = Health;
-        Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
+        super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
 
         if (LastDamagedTime > 0 && Level.TimeSeconds - LastDamagedTime > 10.0)
         {
@@ -606,7 +606,7 @@ simulated function NotifySyringeC()
 
 simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
 {
-    Super.PlayDying(DamageType, HitLoc);
+    super.PlayDying(DamageType, HitLoc);
 
     KillPseudoSquad();
 
@@ -639,12 +639,12 @@ ignores ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, St
         // Only Commando can damage Patriarch in shield state
         if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
         {
-            Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
+            super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
     }
 
 Begin:
-    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', CombatStages[SyringeCount].ShieldDuration, true);
+    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', CombatStages[SyringeCount].ShieldDuration, True);
     Sleep(CombatStages[SyringeCount].ShieldDuration);
 
     GoToState('');
@@ -672,7 +672,7 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
     }
 
 Begin:
-    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', 1.0, true);
+    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', 1.0, True);
     TeleportToPlayers();
 
     GoToState('');
@@ -689,7 +689,7 @@ state Charging
         }
         else
         {
-            Global.RangedAttack(A);
+            global.RangedAttack(A);
         }
     }
 
@@ -705,9 +705,9 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
 
     function BeginState()
     {
-        Super.BeginState();
-        bBlockActors = false;
-        bIgnoreEncroachers = true;
+        super.BeginState();
+        bBlockActors = False;
+        bIgnoreEncroachers = True;
         MotionDetectorThreat = 0;
 
         ZombieCrispDown();
@@ -715,9 +715,9 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
 
     function EndState()
     {
-        Super.EndState();
-        bIgnoreEncroachers = false;
-        bBlockActors = true;
+        super.EndState();
+        bIgnoreEncroachers = False;
+        bBlockActors = True;
         MotionDetectorThreat = default.MotionDetectorThreat;
     }
 
@@ -727,7 +727,7 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
         // Only Commando can damage Patriarch in invisible state
         if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
         {
-            Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
+            super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
     }
 }
@@ -739,9 +739,9 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
 
     function BeginState()
     {
-        Super.BeginState();
-        bBlockActors = false;
-        bIgnoreEncroachers = true;
+        super.BeginState();
+        bBlockActors = False;
+        bIgnoreEncroachers = True;
         MotionDetectorThreat = 0;
 
         ZombieCrispDown();
@@ -754,9 +754,9 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
 
     function EndState()
     {
-        Super.EndState();
-        bIgnoreEncroachers = false;
-        bBlockActors = true;
+        super.EndState();
+        bIgnoreEncroachers = False;
+        bBlockActors = True;
         MotionDetectorThreat = default.MotionDetectorThreat;
 
         if (bCloaked)
@@ -771,7 +771,7 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
         // Only Commando can damage Patriarch in invisible state
         if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
         {
-            Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
+            super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
     }
 
@@ -788,23 +788,23 @@ state FireChaingun
 {
     function BeginState()
     {
-        Super.BeginState();
-        bMovingChaingunAttack = true;
-        bChargingPlayer = true;
-        bCanStrafe = true;
+        super.BeginState();
+        bMovingChaingunAttack = True;
+        bChargingPlayer = True;
+        bCanStrafe = True;
     }
 
     function EndState()
     {
-        bMovingChaingunAttack = false;
-        bChargingPlayer = false;
-        bCanStrafe = false;
-        Super.EndState();
+        bMovingChaingunAttack = False;
+        bChargingPlayer = False;
+        bCanStrafe = False;
+        super.EndState();
     }
 
     function Tick(float Delta)
     {
-        Super(KFMonster).Tick(Delta);
+        super(KFMonster).Tick(Delta);
 
         if (bChargingPlayer)
         {
@@ -820,7 +820,7 @@ state FireChaingun
     {
         if (MGFireCounter <= 0)
         {
-            bShotAnim = true;
+            bShotAnim = True;
             Acceleration = vect(0, 0, 0);
             SetAnimAction('FireEndMG');
             HandleWaitForAnim('FireEndMG');
@@ -860,14 +860,14 @@ state FireChaingun
                 Controller.Focus = Controller.Target;
             }
 
-            bShotAnim = false;
-            bFireAtWill = true;
+            bShotAnim = False;
+            bFireAtWill = True;
             SetAnimAction('FireMG');
         }
     }
 
 Begin:
-    while (true)
+    while (True)
     {
         if (!bMovingChaingunAttack)
         {
@@ -876,7 +876,7 @@ Begin:
 
         if (MGFireCounter <= 0 || (MGLostSightTimeout > 0 && Level.TimeSeconds > MGLostSightTimeout))
         {
-            bShotAnim = true;
+            bShotAnim = True;
             Acceleration = vect(0, 0, 0);
             SetAnimAction('FireEndMG');
             HandleWaitForAnim('FireEndMG');
@@ -935,18 +935,18 @@ state FireMissile
             SavedFireProperties.ProjectileClass = Class'N7_BossLAWProj';
             SavedFireProperties.WarnTargetPct = 0.15;
             SavedFireProperties.MaxRange = 10000;
-            SavedFireProperties.bTossed = false;
-            SavedFireProperties.bLeadTarget = true;
-            SavedFireProperties.bInitialized = true;
+            SavedFireProperties.bTossed = False;
+            SavedFireProperties.bLeadTarget = True;
+            SavedFireProperties.bInitialized = True;
         }
         SavedFireProperties.bInstantHit = (SyringeCount < 1);
         SavedFireProperties.bTrySplash = (SyringeCount >= 2);
 
         R = AdjustAim(SavedFireProperties, Start, 100);
-        PlaySound(RocketFireSound, SLOT_Interact, 2.0,, TransientSoundRadius,, false);
+        PlaySound(RocketFireSound, SLOT_Interact, 2.0,, TransientSoundRadius,, False);
         Spawn(Class'N7_BossLAWProj',,, Start, R);
 
-        bShotAnim = true;
+        bShotAnim = True;
         Acceleration = vect(0, 0, 0);
         SetAnimAction('FireEndMissile');
         HandleWaitForAnim('FireEndMissile');
@@ -968,7 +968,7 @@ state FireMissile
     }
 
 Begin:
-    while (true)
+    while (True)
     {
         Acceleration = vect(0, 0, 0);
         Sleep(GetAnimDuration('PreFireMissile'));
@@ -990,10 +990,10 @@ defaultproperties
 {
     MenuName="N7 Patriarch"
 
-    CombatStages(0)=(bCanKite=true,KiteChance=1.0,bSpawnPseudos=false,MinPseudos=0,MaxPseudos=0,CGShots=75,RLShots=1,CGFireRate=0.05,RLFireRate=0.5,bUseShield=false,ShieldChance=0.0,ShieldDuration=0.0,bUseTeleport=false,TeleportChance=0.0)
-    CombatStages(1)=(bCanKite=false,KiteChance=0.35,bSpawnPseudos=false,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=1,CGFireRate=0.04,RLFireRate=0.4,bUseShield=false,ShieldChance=0.0,ShieldDuration=0.0,bUseTeleport=false,TeleportChance=0.0)
-    CombatStages(2)=(bCanKite=false,KiteChance=0.2,bSpawnPseudos=false,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.3,bUseShield=true,ShieldChance=0.05,ShieldDuration=1.0,bUseTeleport=false,TeleportChance=0.0)
-    CombatStages(3)=(bCanKite=false,KiteChance=0.1,bSpawnPseudos=true,MinPseudos=3,MaxPseudos=5,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.2,bUseShield=true,ShieldChance=0.05,ShieldDuration=2.0,bUseTeleport=true,TeleportChance=0.1)
+    CombatStages(0)=(bCanKite=True,KiteChance=1.0,bSpawnPseudos=False,MinPseudos=0,MaxPseudos=0,CGShots=75,RLShots=1,CGFireRate=0.05,RLFireRate=0.5,bUseShield=False,ShieldChance=0.0,ShieldDuration=0.0,bUseTeleport=False,TeleportChance=0.0)
+    CombatStages(1)=(bCanKite=False,KiteChance=0.35,bSpawnPseudos=False,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=1,CGFireRate=0.04,RLFireRate=0.4,bUseShield=False,ShieldChance=0.0,ShieldDuration=0.0,bUseTeleport=False,TeleportChance=0.0)
+    CombatStages(2)=(bCanKite=False,KiteChance=0.2,bSpawnPseudos=False,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.3,bUseShield=True,ShieldChance=0.05,ShieldDuration=1.0,bUseTeleport=False,TeleportChance=0.0)
+    CombatStages(3)=(bCanKite=False,KiteChance=0.1,bSpawnPseudos=True,MinPseudos=3,MaxPseudos=5,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.2,bUseShield=True,ShieldChance=0.05,ShieldDuration=2.0,bUseTeleport=True,TeleportChance=0.1)
 
     MinChargeDistance=700
     MaxChargeDistance=1250

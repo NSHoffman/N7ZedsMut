@@ -29,15 +29,15 @@ function SpawnTwoShots()
         SavedFireProperties.ProjectileClass = HuskFireProjClass;
         SavedFireProperties.WarnTargetPct = 1;
         SavedFireProperties.MaxRange = 65535;
-        SavedFireProperties.bTossed = false;
-        SavedFireProperties.bTrySplash = true;
-        SavedFireProperties.bLeadTarget = true;
-        SavedFireProperties.bInstantHit = false;
-        SavedFireProperties.bInitialized = true;
+        SavedFireProperties.bTossed = False;
+        SavedFireProperties.bTrySplash = True;
+        SavedFireProperties.bLeadTarget = True;
+        SavedFireProperties.bInstantHit = False;
+        SavedFireProperties.bInitialized = True;
     }
 
     // Turn off extra collision before spawning, otherwise spawn fails
-    ToggleAuxCollision(false);
+    ToggleAuxCollision(False);
     FireRotation = Controller.AdjustAim(SavedFireProperties, FireStart, 0);
 
     foreach DynamicActors(class'KFMonsterController', KFMonstControl)
@@ -52,7 +52,7 @@ function SpawnTwoShots()
     }
     Spawn(HuskFireProjClass, Self,, FireStart, FireRotation);
     // Turn extra collision back on
-    ToggleAuxCollision(true);
+    ToggleAuxCollision(True);
 }
 
 function RangedAttack(Actor A)
@@ -68,16 +68,16 @@ function RangedAttack(Actor A)
     if (Physics == PHYS_Swimming)
     {
         SetAnimAction('Claw');
-        bShotAnim = true;
+        bShotAnim = True;
         LastFireTime = Level.TimeSeconds;
     }
 
     else if (VSize(A.Location - Location) < MeleeRange + CollisionRadius + A.CollisionRadius)
     {
-        bShotAnim = true;
+        bShotAnim = True;
         LastFireTime = Level.TimeSeconds;
         SetAnimAction('Claw');
-        Controller.bPreparingMove = true;
+        Controller.bPreparingMove = True;
         Acceleration = vect(0, 0, 0);
     }
 
@@ -86,7 +86,7 @@ function RangedAttack(Actor A)
         || (!Region.Zone.bDistanceFog && VSize(A.Location - Location) <= 65535) 
         || (Region.Zone.bDistanceFog && VSizeSquared(A.Location - Location) < (Square(Region.Zone.DistanceFogEnd) * 0.8)))
     ) {
-        bShotAnim = true;
+        bShotAnim = True;
         SetAnimAction('ShootBurnsAndMove');
 
         NextFireTimeCooldown = FMin(MaxFireInterval, MinFireInterval + FRand() * ProjectileFireInterval);
@@ -122,7 +122,7 @@ simulated event SetAnimAction(name NewAction)
     if (Level.NetMode != NM_Client)
     {
         AnimAction = NewAction;
-        bResetAnimAct = true;
+        bResetAnimAct = True;
         ResetAnimActTime = Level.TimeSeconds+0.3;
     }
 }
@@ -132,7 +132,7 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
 {
     if (AnimName == 'ShootBurnsAndMove')
     {
-        AnimBlendParams(1, 1.0, 0.0,, FireRootBone, true);
+        AnimBlendParams(1, 1.0, 0.0,, FireRootBone, True);
         PlayAnim('ShootBurns',, 0.1, 1);
 
         return 1;
@@ -145,7 +145,7 @@ simulated function bool AnimNeedsWait(name TestAnim)
 {
     if (TestAnim == 'ShootBurnsAndMove')
     {
-        return false;
+        return False;
     }
 
     return super.AnimNeedsWait(TestAnim);

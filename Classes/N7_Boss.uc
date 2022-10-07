@@ -401,7 +401,8 @@ function DoorAttack(Actor A)
 
 function bool ShouldChargeFromDamage()
 {
-    return !bChargingPlayer 
+    return !bChargingPlayer
+        && SyringeCount < 3
         && Health > HealingLevels[SyringeCount] 
         && DamageToCharge > DamageToChargeThreshold;
 }
@@ -490,7 +491,7 @@ function ClawDamageTarget()
     {
         bDamagedSomeone = MeleeDamageTarget(UsedMeleeDamage, PushDir);
     }
-    else
+    else if (Controller != None)
     {
         OldTarget = Controller.Target;
         foreach DynamicActors(Class'KFHumanPawn', P)

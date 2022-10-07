@@ -16,7 +16,7 @@ function SpawnTwoShots()
 
     if (Controller != None && KFDoorMover(Controller.Target) != None)
     {
-        Controller.Target.TakeDamage(22, Self, Location, vect(0, 0, 0), Class'DamTypeVomit');
+        Controller.Target.TakeDamage(22, Self, Location, vect(0, 0, 0), Class'DamTypeBurned');
         return;
     }
 

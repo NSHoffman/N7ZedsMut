@@ -10,8 +10,6 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 defaultProperties
 {
     MenuName="N7 Bloat"
-    GroundSpeed=90.000000
-    WaterSpeed=105.000000
     DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmBloat'
     DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegBloat'
     DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadBloat'

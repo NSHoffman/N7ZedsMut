@@ -1,11 +1,13 @@
 class N7_FleshpoundLight extends Light;
 
-function ChangeToRed() {
+function ChangeToRed() 
+{
     LightHue = 255;
 }
 
-function ChangeToYellow() {
-    LightHue = 36;
+function ChangeToYellow() 
+{
+    LightHue = default.LightHue;
 }
 
 defaultproperties

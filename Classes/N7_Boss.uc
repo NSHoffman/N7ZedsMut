@@ -681,7 +681,7 @@ Begin:
 state Charging
 {
     function RangedAttack(Actor A)
-	{
+    {
         if (VSize(A.Location - Location) > MaxChargeDistance && Level.TimeSeconds - LastForceChargeTime > 3.0)
         {
             GoToState('');
@@ -690,11 +690,11 @@ state Charging
         {
             Global.RangedAttack(A);
         }
-	}
+    }
 
 Begin:
-	Sleep(6);
-	GoToState('');
+    Sleep(6);
+    GoToState('');
 }
 
 /** God mode + invisibility when escaping */

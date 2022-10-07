@@ -6,7 +6,7 @@ class N7_BossLAWProj extends BossLAWProj;
 static function PreloadAssets();
 static function bool UnloadAssets()
 {
-	return true;
+	return True;
 }
 
 /** Removed damage reduction when there's only one player */
@@ -32,7 +32,7 @@ simulated function PostBeginPlay()
         }
     }
 
-    Super(LAWProj).PostBeginPlay();
+    super(LAWProj).PostBeginPlay();
 }
 
 /** Cannot be dud + No need to check for teams */
@@ -69,7 +69,7 @@ simulated function HitWall(vector HitNormal, actor Wall)
         OrigLoc = Instigator.Location;
     }
 
-    Super(Projectile).HitWall(HitNormal, Wall);
+    super(Projectile).HitWall(HitNormal, Wall);
 }
 
 defaultproperties 

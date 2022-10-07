@@ -5,23 +5,23 @@ var const float AdjustedHeadHealthModifier;
 
 simulated function PostBeginPlay()
 {
-    Super.PostBeginPlay();
+    super.PostBeginPlay();
 
-    SetTimer(1, false);
+    SetTimer(1, False);
 }
 
 function Timer()
 {
-    /** Sets bBlockActors to true after getting spawned */
+    /** Sets bBlockActors to True after getting spawned */
     if (!bBlockActors)
     {
-        bBlockActors = true;
+        bBlockActors = True;
     }
 
-    /** Resets bUnlit to false after KFX.StalkerGlow overlay */
+    /** Resets bUnlit to False after KFX.StalkerGlow overlay */
     if (bUnlit)
     {
-        bUnlit = false;
+        bUnlit = False;
     }
 }
 
@@ -62,7 +62,7 @@ simulated function int DoAnimAction(name AnimName)
         return 0;
     }
 
-    return Super(KFMonster).DoAnimAction(AnimName);
+    return super(KFMonster).DoAnimAction(AnimName);
 }
 
 /** Removed blood splatters and burnified effect */
@@ -150,16 +150,16 @@ function Died(
     Class<DamageType> DamageType, 
     Vector HitLocation)
 {
-    Super(KFMonster).Died(Killer, DamageType, HitLocation);
+    super(KFMonster).Died(Killer, DamageType, HitLocation);
 }
 
 simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
 {
     AmbientSound = None;
-    bCanTeleport = false;
-    bReplicateMovement = false;
-    bTearOff = true;
-    bPlayedDeath = true;
+    bCanTeleport = False;
+    bReplicateMovement = False;
+    bTearOff = True;
+    bPlayedDeath = True;
 
     if (CurrentCombo != None)
     {
@@ -169,8 +169,8 @@ simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
     HitDamageType = DamageType;
     TakeHitLocation = HitLoc;
 
-    bStunned = false;
-    bMovable = true;
+    bStunned = False;
+    bMovable = True;
 
     AnimBlendParams(1, 0.0);
     FireState = FS_None;
@@ -178,7 +178,7 @@ simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
     LifeSpan = RagdollLifeSpan;
 
     Visibility = default.Visibility;
-    bUnlit = true;
+    bUnlit = True;
     /**
      * Apply StalkerGlow effect before death
      * To emphasize pseudo/holographic nature of this ZED
@@ -197,7 +197,7 @@ simulated function CloakBoss()
     if (!bPlayedDeath)
     {
         Visibility = 1;
-        bCloaked = true;
+        bCloaked = True;
 
         if (Level.NetMode == NM_DedicatedServer)
         {
@@ -210,7 +210,7 @@ simulated function CloakBoss()
         // Invisible - no shadow
         if (PlayerShadow != None)
         {
-            PlayerShadow.bShadowActive = false;
+            PlayerShadow.bShadowActive = False;
         }
 
         if (RealTimeShadow != None)
@@ -220,7 +220,7 @@ simulated function CloakBoss()
 
         // Remove/disallow projectors on invisible people
         Projectors.Remove(0, Projectors.Length);
-        bAcceptsProjectors = false;
+        bAcceptsProjectors = False;
     }
 }
 
@@ -234,7 +234,7 @@ function RangedAttack(Actor A)
 
     if (IsCloseEnuf(A))
     {
-        bShotAnim = true;
+        bShotAnim = True;
 
         if (Pawn(A) != None && FRand() < 0.5)
         {
@@ -347,7 +347,7 @@ simulated function Tick(float DeltaTime)
     if (bResetAnimAct && ResetAnimActTime < Level.TimeSeconds)
     {
         AnimAction = '';
-        bResetAnimAct = false;
+        bResetAnimAct = False;
     }
 
     if (Controller != None)
@@ -370,16 +370,16 @@ function ApplyHolographicGlow(name AnimName, optional float Rate)
     local float AnimDuration;
     AnimDuration = GetAnimDuration(AnimName, Rate);
 
-    bUnlit = true;
-    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', AnimDuration, true);
-    SetTimer(AnimDuration, false);
+    bUnlit = True;
+    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', AnimDuration, True);
+    SetTimer(AnimDuration, False);
 }
 
 state ZombieDying
 {
 Begin:
     Sleep(0.2);
-    bDestroyNextTick = true;
+    bDestroyNextTick = True;
 }
 
 /********************************************
@@ -439,8 +439,8 @@ defaultproperties
     HealthMax=5
     AdjustedHealthModifier=1.0
     AdjustedHeadHealthModifier=1.0
-    bBlockActors=false
-    bIgnoreEncroachers=true
+    bBlockActors=False
+    bIgnoreEncroachers=True
     MotionDetectorThreat=0
     HitSound(0)=Sound'Inf_Weapons.panzerfaust60.faust_explode_distant02'
     DeathSound(0)=Sound'Inf_Weapons.panzerfaust60.faust_explode_distant02'

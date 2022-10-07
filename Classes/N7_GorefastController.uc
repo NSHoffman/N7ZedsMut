@@ -16,7 +16,7 @@ state WaitForAnim
                 Pawn.GroundSpeed = Pawn.Default.GroundSpeed;
             }
         }
-        bUseFreezeHack = false;
+        bUseFreezeHack = False;
     }
 }
 

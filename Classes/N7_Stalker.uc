@@ -14,7 +14,7 @@ var int MaxPseudoSquadSize;
 /** Spawning pseudo stalkers squad */
 simulated function PostBeginPlay()
 {
-    Super.PostBeginPlay();
+    super.PostBeginPlay();
 
     SpawnPseudoSquad();
 }
@@ -34,12 +34,12 @@ simulated event SetAnimAction(name NewAction)
 
     ExpectingChannel = AttackAndMoveDoAnimAction(NewAction);
     
-    bWaitForAnim = false;
+    bWaitForAnim = False;
 
     if (Level.NetMode != NM_Client) 
     {
         AnimAction = NewAction;
-        bResetAnimAct = true;
+        bResetAnimAct = True;
         ResetAnimActTime = Level.TimeSeconds + 0.3;
     }
 }
@@ -66,7 +66,7 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
         return 1;
     }
 
-    return Super(KFMonster).DoAnimAction(AnimName);
+    return super(KFMonster).DoAnimAction(AnimName);
 }
 
 simulated function Tick(float DeltaTime) 
@@ -74,7 +74,7 @@ simulated function Tick(float DeltaTime)
     local bool bKeepAccelerationWhileAttacking;
     bKeepAccelerationWhileAttacking = LookTarget != None && bShotAnim && !bWaitForAnim;
 
-    Super(KFMonster).Tick(DeltaTime);
+    super(KFMonster).Tick(DeltaTime);
 
     /** 
      * This part is taken from parent ZombieStalker class
@@ -98,11 +98,11 @@ simulated function Tick(float DeltaTime)
                 && VSizeSquared(Location - LocalKFHumanPawn.Location) < LocalKFHumanPawn.GetStalkerViewDistanceMulti() * 640000.0 // 640000 = 800 Units
             )
             {
-                bSpotted = true;
+                bSpotted = True;
             }
             else
             {
-                bSpotted = false;
+                bSpotted = False;
             }
 
             if (!bSpotted && !bCloaked && Skins[0] != Combiner'KF_Specimens_Trip_N7.stalker_cmb')
@@ -113,7 +113,7 @@ simulated function Tick(float DeltaTime)
             {
                 if (bSpotted && Skins[0] != Finalblend'KFX.StalkerGlow')
                 {
-                    bUnlit = false;
+                    bUnlit = False;
                     CloakStalker();
                 }
                 else if (Skins[0] != Shader'KF_Specimens_Trip_N7.stalker_invisible')
@@ -138,7 +138,7 @@ function RangedAttack(Actor A)
 
     if (bDoRangedAttack) 
     {
-        bShotAnim = true;
+        bShotAnim = True;
         SetAnimAction('ClawAndMove');
     }
 }
@@ -184,7 +184,7 @@ function KillPseudoSquad()
 
 function RemoveHead()
 {
-    Super.RemoveHead();
+    super.RemoveHead();
 
     if (!bCrispified)
     {
@@ -207,14 +207,14 @@ simulated function CloakStalker()
 
         Skins[0] = Finalblend'KFX.StalkerGlow';
         Skins[1] = Finalblend'KFX.StalkerGlow';
-        bUnlit = true;
+        bUnlit = True;
         return;
     }
 
     if (!bDecapitated && !bCrispified)
     {
         Visibility = 1;
-        bCloaked = true;
+        bCloaked = True;
 
         if (Level.NetMode == NM_DedicatedServer)
             return;
@@ -223,13 +223,13 @@ simulated function CloakStalker()
         Skins[1] = Shader'KF_Specimens_Trip_N7.stalker_invisible';
 
         if (PlayerShadow != None)
-            PlayerShadow.bShadowActive = false;
+            PlayerShadow.bShadowActive = False;
         if (RealTimeShadow != None)
             RealTimeShadow.Destroy();
 
         Projectors.Remove(0, Projectors.Length);
-        bAcceptsProjectors = false;
-        SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+        bAcceptsProjectors = False;
+        SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, True);
     }
 }
 
@@ -245,8 +245,8 @@ simulated function UnCloakStalker()
         LastUncloakTime = Level.TimeSeconds;
 
         Visibility = default.Visibility;
-        bCloaked = false;
-        bUnlit = false;
+        bCloaked = False;
+        bUnlit = False;
 
         // 25% chance of our Enemy saying something about us being invisible
         if (
@@ -258,7 +258,7 @@ simulated function UnCloakStalker()
         )
         {
             PlayerController(Controller.Enemy.Controller).Speech('AUTO', 17, "");
-            KFGameType(Level.Game).bDidStalkerInvisibleMessage = true;
+            KFGameType(Level.Game).bDidStalkerInvisibleMessage = True;
         }
 
         if (Level.NetMode == NM_DedicatedServer)
@@ -270,19 +270,19 @@ simulated function UnCloakStalker()
             Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
 
             if (PlayerShadow != None)
-                PlayerShadow.bShadowActive = true;
+                PlayerShadow.bShadowActive = True;
 
-            bAcceptsProjectors = true;
-            SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+            bAcceptsProjectors = True;
+            SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, True);
         }
     }
 }
 
 simulated function SetZappedBehavior()
 {
-    Super.SetZappedBehavior();
+    super.SetZappedBehavior();
 
-    bUnlit = false;
+    bUnlit = False;
 
     // Handle setting the zed to uncloaked so the zapped overlay works properly
     if (Level.Netmode != NM_DedicatedServer)
@@ -291,16 +291,16 @@ simulated function SetZappedBehavior()
         Skins[0] = Combiner'KF_Specimens_Trip_N7.stalker_cmb';
 
         if (PlayerShadow != None)
-            PlayerShadow.bShadowActive = true;
+            PlayerShadow.bShadowActive = True;
 
-        bAcceptsProjectors = true;
-        SetOverlayMaterial(Material'KFZED_FX_T.Energy.ZED_overlay_Hit_Shdr', 999, true);
+        bAcceptsProjectors = True;
+        SetOverlayMaterial(Material'KFZED_FX_T.Energy.ZED_overlay_Hit_Shdr', 999, True);
     }
 }
 
 simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
 {
-    Super.PlayDying(DamageType, HitLoc);
+    super.PlayDying(DamageType, HitLoc);
 
     KillPseudoSquad();
 

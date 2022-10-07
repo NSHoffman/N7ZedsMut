@@ -64,7 +64,7 @@ simulated function ProcessTouch(Actor Other, Vector HitLocation)
                 Other.TakeDamage(ImpactDamage, Instigator, HitLocation, Normal(Velocity), ImpactDamageType);
             }
 
-            bDud = true;
+            bDud = True;
             Velocity = vect(0, 0, 0);
             LifeSpan = 1.0;
             SetPhysics(PHYS_Falling);

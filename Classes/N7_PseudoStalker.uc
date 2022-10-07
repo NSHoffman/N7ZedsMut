@@ -5,23 +5,23 @@ var const float AdjustedHeadHealthModifier;
 
 simulated function PostBeginPlay()
 {
-    Super(ZombieStalker).PostBeginPlay();
+    super(ZombieStalker).PostBeginPlay();
 
-    SetTimer(1, false);
+    SetTimer(1, False);
 }
 
 function Timer()
 {
-    /** Sets bBlockActors to true after getting spawned */
+    /** Sets bBlockActors to True after getting spawned */
     if (!bBlockActors)
     {
-        bBlockActors = true;
+        bBlockActors = True;
     }
 
-    /** Resets bUnlit to false after KFX.StalkerGlow overlay */
+    /** Resets bUnlit to False after KFX.StalkerGlow overlay */
     if (bUnlit)
     {
-        bUnlit = false;
+        bUnlit = False;
     }
 }
 
@@ -48,9 +48,9 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
          * Apply StalkerGlow effect before hit
          * To emphasize pseudo/holographic nature of this ZED
          */
-        bUnlit = true;
-        SetOverlayMaterial(Finalblend'KFX.StalkerGlow', AnimDuration, true);
-        SetTimer(AnimDuration, false);
+        bUnlit = True;
+        SetOverlayMaterial(Finalblend'KFX.StalkerGlow', AnimDuration, True);
+        SetTimer(AnimDuration, False);
 
         AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
         PlayAnim(AnimName,, 0.1, 1);
@@ -58,7 +58,7 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
         return 1;
     }
 
-    return Super(KFMonster).DoAnimAction(AnimName);
+    return super(KFMonster).DoAnimAction(AnimName);
 }
 
 /** Removed blood splatters and burnified effect */
@@ -143,10 +143,10 @@ function PlayHit(
 simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
 {
     AmbientSound = None;
-    bCanTeleport = false;
-    bReplicateMovement = false;
-    bTearOff = true;
-    bPlayedDeath = true;
+    bCanTeleport = False;
+    bReplicateMovement = False;
+    bTearOff = True;
+    bPlayedDeath = True;
 
     if (CurrentCombo != None)
     {
@@ -156,8 +156,8 @@ simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
     HitDamageType = DamageType;
     TakeHitLocation = HitLoc;
 
-    bStunned = false;
-    bMovable = true;
+    bStunned = False;
+    bMovable = True;
 
     AnimBlendParams(1, 0.0);
     FireState = FS_None;
@@ -166,7 +166,7 @@ simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
     LocalKFHumanPawn = None;
 
     Visibility = default.Visibility;
-    bUnlit = true;
+    bUnlit = True;
     /**
      * Apply StalkerGlow effect before death
      * To emphasize pseudo/holographic nature of this ZED
@@ -185,7 +185,7 @@ simulated function CloakStalker()
     if (!bPlayedDeath)
     {
         Visibility = 1;
-        bCloaked = true;
+        bCloaked = True;
 
         if (Level.NetMode == NM_DedicatedServer)
         {
@@ -198,7 +198,7 @@ simulated function CloakStalker()
         // Invisible - no shadow
         if (PlayerShadow != None)
         {
-            PlayerShadow.bShadowActive = false;
+            PlayerShadow.bShadowActive = False;
         }
 
         if (RealTimeShadow != None)
@@ -208,7 +208,7 @@ simulated function CloakStalker()
 
         // Remove/disallow projectors on invisible people
         Projectors.Remove(0, Projectors.Length);
-        bAcceptsProjectors = false;
+        bAcceptsProjectors = False;
     }
 }
 
@@ -308,7 +308,7 @@ simulated function Tick(float DeltaTime)
     if (bResetAnimAct && ResetAnimActTime < Level.TimeSeconds)
     {
         AnimAction = '';
-        bResetAnimAct = false;
+        bResetAnimAct = False;
     }
 
     if (Controller != None)
@@ -342,7 +342,7 @@ state ZombieDying
 {
 Begin:
     Sleep(0.2);
-    bDestroyNextTick = true;
+    bDestroyNextTick = True;
 }
 
 /********************************************
@@ -410,8 +410,8 @@ defaultProperties
     HealthMax=5
     AdjustedHealthModifier=1.0
     AdjustedHeadHealthModifier=1.0
-    bBlockActors=false
-    bIgnoreEncroachers=true
+    bBlockActors=False
+    bIgnoreEncroachers=True
     MotionDetectorThreat=0
     HitSound(0)=Sound'Inf_Weapons.panzerfaust60.faust_explode_distant02'
     DeathSound(0)=Sound'Inf_Weapons.panzerfaust60.faust_explode_distant02'

@@ -416,17 +416,11 @@ simulated function UnCloakBoss() {}
 /** No hit effects */
 simulated function ProcessHitFX() {}
 
-/** No gibs */
+/** No gibs and blood stains */
 event KImpact(Actor Other, Vector Pos, Vector ImpactVel, Vector ImpactNorm) {}
 
 simulated function HideBone(name BoneName) {}
 simulated function SpawnGibs(Rotator HitRotation, float ChunkPerterbation) {}
-
-/** No zapped behaviour */
-function SetZapped(float ZapAmount, Pawn Instigator) {}
-
-simulated function SetZappedBehavior() {}
-simulated function UnSetZappedBehavior() {}
 
 /** No decapitation */
 function RemoveHead() {}
@@ -434,8 +428,6 @@ function RemoveHead() {}
 /** No burning behaviour */
 simulated function StartBurnFX() {}
 simulated function StopBurnFX() {}
-simulated function SetBurningBehavior() {}
-simulated function UnSetBurningBehavior() {}
 simulated function ZombieCrispUp() {}
 
 defaultproperties

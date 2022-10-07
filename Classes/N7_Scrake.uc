@@ -64,7 +64,6 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 defaultProperties
 {
     MenuName="N7 Scrake"
-    AttackChargeRate=3.500000
     DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmScrake'
     DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegScrake'
     DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadScrake'

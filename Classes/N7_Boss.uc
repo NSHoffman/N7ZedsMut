@@ -1,23 +1,64 @@
-class N7_Boss extends KFChar.ZombieBoss_STANDARD;
+class N7_Boss extends KFChar.ZombieBoss_STANDARD
+    config(N7ZedsMut);
 
-/**
- * @param bCanKite          - Whether players are allowed to exploit kiting 
- * @param bSpawnProjections = Whether patriarch's pseudos should be spawned after healing
- * @param CGShots           - Fixed number of chaingun shots
- * @param CGFireRate        - Chaingun velocity
- * @param RLShots           - Fixed number of rockets to be shot
- * @param RLFireRate        - Rocket Launcher velocity
- */
 struct CombatStage
 {
-    var bool bCanKite, bSpawnProjections;
-    var byte CGShots, RLShots;
-    var float CGFireRate, RLFireRate;
+    var bool
+        // Whether players are allowed to exploit kiting
+        bCanKite,
+
+        // Whether patriarch's pseudos should be spawned after healing
+        bSpawnPseudos,
+
+        // Whether patriarch can use shield to avoid damage
+        bUseShield,
+
+        // Whether patriarch can teleport closer to players
+        bUseTeleport;
+
+    var int
+        // Fixed number of chaingun shots
+        CGShots,
+
+        // Fixed number of rockets to be shot
+        RLShots,
+
+        // Limits of pseudos to be spawned
+        MinPseudos,
+        MaxPseudos;
+
+    var float
+        // Chance of kiting when bCanKite is False
+        KiteChance,
+
+        // Chaingun velocity
+        CGFireRate,
+
+        // Rocket Launcher velocity
+        RLFireRate,
+
+        // Chance patriarch's shield gets activated
+        ShieldChance,
+
+        ShieldDuration,
+
+        // Chance patriarch will teleport to players
+        TeleportChance;
 };
 
-var CombatStage CombatStages[4];
+var config CombatStage CombatStages[4];
 
-var byte MissileShotsLeft;
+var int MissileShotsLeft;
+
+var int MinChargeDistance;
+var int MaxChargeDistance;
+
+var int DamageToChargeThreshold;
+var int DamageToCharge;
+
+var float LastShieldTime;
+var float LastTeleportTime;
+var float LastDamagedTime;
 
 /**
  * Each patriarch has a chance to spawn
@@ -26,9 +67,6 @@ var byte MissileShotsLeft;
  */
 var Class<N7_Boss> PseudoClass;
 var Array<N7_Boss> PseudoSquad;
-
-var int MinPseudoSquadSize;
-var int MaxPseudoSquadSize;
 
 var bool bMovingChaingunAttack;
 
@@ -50,7 +88,6 @@ simulated event SetAnimAction(name NewAction)
         return;
     }
 
-    // 50% that Patriarch will use alternate claw animation
     if (NewAction == 'MeleeClaw' && FRand() > 0.5)
     {
         NewAction = 'MeleeClaw2';
@@ -90,7 +127,7 @@ simulated function bool AnimNeedsWait(name TestAnim)
     return Super.AnimNeedsWait(TestAnim);
 }
 
-/** 
+/**
  * Unused MeleeClaw2 animation added
  * Attack animation rate increased
  * Moving chaingun attack animation
@@ -98,14 +135,14 @@ simulated function bool AnimNeedsWait(name TestAnim)
 simulated function int DoAnimAction(name AnimName)
 {
     if (
-        AnimName == 'MeleeClaw' || 
-        AnimName == 'MeleeClaw2' || 
-        AnimName == 'MeleeImpale' || 
+        AnimName == 'MeleeClaw' ||
+        AnimName == 'MeleeClaw2' ||
+        AnimName == 'MeleeImpale' ||
         AnimName == 'transition')
     {
         AnimBlendParams(1, 1.0, 0.0,, SpineBone1);
         PlayAnim(AnimName, 1.25, 0.1, 1);
-        
+
         return 1;
     }
     else if (AnimName == 'RadialAttack')
@@ -201,20 +238,15 @@ simulated function CloakBoss()
     Skins[0] = Shader'KF_Specimens_Trip_N7.patriarch_invisible_gun';
     Skins[1] = Shader'KF_Specimens_Trip_N7.patriarch_invisible';
 
-    // Invisible - no shadow
     if (PlayerShadow != None)
     {
         PlayerShadow.bShadowActive = false;
     }
-
-    // Remove/disallow projectors on invisible people
     Projectors.Remove(0, Projectors.Length);
     bAcceptsProjectors = false;
 
-    // Randomly send out a message about Patriarch going invisible(10% chance)
     if (FRand() < 0.10)
     {
-        // Pick a random Player to say the message
         index = Rand(Level.Game.NumPlayers);
 
         for (C = Level.ControllerList; C != None; C = C.NextController)
@@ -230,6 +262,22 @@ simulated function CloakBoss()
             }
         }
     }
+}
+
+simulated function ZombieCrispDown()
+{
+    bAshen = false;
+    bCrispified = false;
+
+    UnSetBurningBehavior();
+
+    if (Level.NetMode == NM_DedicatedServer)
+    {
+        return;
+    }
+
+    Skins[0] = default.Skins[0];
+    Skins[1] = default.Skins[1];
 }
 
 function RangedAttack(Actor A)
@@ -263,6 +311,7 @@ function RangedAttack(Actor A)
             SetAnimAction('MeleeClaw');
         }
     }
+
     else if (Level.TimeSeconds - LastSneakedTime > 20.0)
     {
         if (FRand() < 0.3)
@@ -273,19 +322,30 @@ function RangedAttack(Actor A)
         SetAnimAction('transition');
         GoToState('SneakAround');
     }
+
     else if (bChargingPlayer && (bOnlyE || D < 200))
     {
         return;
     }
-    // Charge distance increased + charge cooldown decreased
+
+    else if (
+       !bDesireChainGun && !bChargingPlayer && D > 1750 &&
+       CombatStages[SyringeCount].bUseTeleport && FRand() <= CombatStages[SyringeCount].TeleportChance &&
+       Level.TimeSeconds - LastTeleportTime > 20.0)
+    {
+        LastTeleportTime = Level.TimeSeconds;
+        GoToState('Teleport');
+    }
+
     else if (
         !bDesireChainGun && !bChargingPlayer &&
-        (D < 700 || (D < 1500 && bOnlyE)) &&
+        (D < MinChargeDistance || (D < MaxChargeDistance && bOnlyE)) &&
         (Level.TimeSeconds - LastChargeTime > (3.5 + 3.0 * FRand())))
     {
         SetAnimAction('transition');
         GoToState('Charging');
     }
+
     else if (LastMissileTime < Level.TimeSeconds && D > 500)
     {
         if (!Controller.LineOfSightTo(A) || FRand() > 0.75)
@@ -293,8 +353,6 @@ function RangedAttack(Actor A)
             LastMissileTime = Level.TimeSeconds + FRand() * 5;
             return;
         }
-
-        // Missile cooldown shortened
         LastMissileTime = Level.TimeSeconds + 7.5 + FRand() * 10;
 
         bShotAnim = true;
@@ -305,6 +363,7 @@ function RangedAttack(Actor A)
 
         GoToState('FireMissile');
     }
+
     else if (!bWaitForAnim && !bShotAnim && LastChainGunTime < Level.TimeSeconds)
     {
         if (!Controller.LineOfSightTo(A) || FRand() > 0.85)
@@ -312,16 +371,14 @@ function RangedAttack(Actor A)
             LastChainGunTime = Level.TimeSeconds + FRand() * 4;
             return;
         }
-
-        // Chaingun cooldown shortened
         LastChainGunTime = Level.TimeSeconds + 4 + FRand() * 6;
 
         bShotAnim = true;
         Acceleration = vect(0, 0, 0);
-        SetAnimAction('PreFireMG');
 
+        SetAnimAction('PreFireMG');
         HandleWaitForAnim('PreFireMG');
-        // More shots per chaingun attack
+
         MGFireCounter =  CombatStages[SyringeCount].CGShots + Rand(100);
 
         GoToState('FireChaingun');
@@ -337,23 +394,62 @@ function DoorAttack(Actor A)
         Acceleration = vect(0, 0, 0);
 
         // Melee attack is used to break doors
-        HandleWaitForAnim('MeleeImpale');
         SetAnimAction('MeleeImpale');
+        HandleWaitForAnim('MeleeImpale');
     }
 }
 
-function TakeDamage(
-    int Damage, 
-    Pawn InstigatedBy, 
-    Vector Hitlocation, 
-    Vector Momentum, 
-    Class<DamageType> DamageType, 
-    optional int HitIndex)
+function bool ShouldChargeFromDamage()
 {
-    // Ignore damage instigated by other ZEDs 
+    return !bChargingPlayer
+        && SyringeCount < 3
+        && Health > HealingLevels[SyringeCount] 
+        && DamageToCharge > DamageToChargeThreshold;
+}
+
+function TakeDamage(
+    int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, Class<DamageType> DamageType, optional int HitIndex)
+{
+    local int OldHealth;
+    local float DamagerDistSq;
+
+    // Ignore damage instigated by other ZEDs
     if (KFMonster(InstigatedBy) == None)
     {
+        OldHealth = Health;
         Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
+
+        if (LastDamagedTime > 0 && Level.TimeSeconds - LastDamagedTime > 10.0)
+        {
+            DamageToCharge = 0;
+        }
+        DamageToCharge += OldHealth - Health;
+        LastDamagedTime = Level.TimeSeconds;
+
+        if (InstigatedBy != None && ShouldChargeFromDamage()) 
+        {
+            DamagerDistSq = VSizeSquared(Location - InstigatedBy.Location);
+
+            if (DamagerDistSq < (MaxChargeDistance * MaxChargeDistance))
+            {
+                DamageToCharge = 0;
+                LastForceChargeTime = Level.TimeSeconds;
+                GoToState('Charging');
+
+                return;
+            }
+        }
+
+        // Enable shield
+        if (CombatStages[SyringeCount].bUseShield
+            && Level.TimeSeconds - LastShieldTime > 5.0
+            && FRand() <= CombatStages[SyringeCount].ShieldChance)
+        {
+            LastShieldTime = Level.TimeSeconds;
+            GoToState('Shield');
+
+            return;
+        }
     }
 }
 
@@ -395,7 +491,7 @@ function ClawDamageTarget()
     {
         bDamagedSomeone = MeleeDamageTarget(UsedMeleeDamage, PushDir);
     }
-    else
+    else if (Controller != None)
     {
         OldTarget = Controller.Target;
         foreach DynamicActors(Class'KFHumanPawn', P)
@@ -415,7 +511,7 @@ function ClawDamageTarget()
      * Kite fix: charge if melee attack didn't hit the target
      * There's still a little chance to avoid charging
      */
-    bChargeFromKite = !CombatStages[SyringeCount].bCanKite && FRand() > 0.15;
+    bChargeFromKite = !CombatStages[SyringeCount].bCanKite && FRand() > CombatStages[SyringeCount].KiteChance;
 
     if (bDamagedSomeone)
     {
@@ -436,8 +532,11 @@ function ClawDamageTarget()
 
 function SpawnPseudoSquad()
 {
-    local int PseudoSquadSize, i;
+    local int PseudoSquadSize, MinPseudoSquadSize, MaxPseudoSquadSize, i;
     local N7_Boss CurrentPseudoBoss;
+
+    MinPseudoSquadSize = CombatStages[SyringeCount].MinPseudos;
+    MaxPseudoSquadSize = CombatStages[SyringeCount].MaxPseudos;
 
     PseudoSquadSize = MinPseudoSquadSize + Rand(MaxPseudoSquadSize - MinPseudoSquadSize + 1);
 
@@ -468,51 +567,6 @@ function KillPseudoSquad()
     PseudoSquad.Length = 0;
 }
 
-/** After healing patriarch might want to avenge damagers */
-function ChargeTargetAfterHealing()
-{
-    local Controller C;
-    local Pawn NextChargeTarget;
-    local bool bWantsToAvenge, bChooseWeakest, bWeakerTarget;
-
-    bWantsToAvenge = KFHumanPawn(LastDamagedBy) != None && KFHumanPawn(LastDamagedBy).Health > 0 && FRand() < 0.6;
-    bChooseWeakest = FRand() < 0.5;
-
-    if (bWantsToAvenge)
-    {
-        NextChargeTarget = LastDamagedBy;
-    }
-    else if (bChooseWeakest)
-    {
-        for (C = Level.ControllerList; C != None; C = C.NextController)
-        { 
-            if (C.IsA('PlayerController') || C.IsA('xBot'))
-            {
-                bWeakerTarget = 
-                    (NextChargeTarget == None && C.Pawn.Health > 0) || 
-                    (NextChargeTarget != None && C.Pawn.Health > 0 && C.Pawn.Health <= NextChargeTarget.Health);
-
-                if (bWeakerTarget)
-                {
-                    NextChargeTarget = C.Pawn;
-                }
-            } 
-        }
-    }
-
-    if (NextChargeTarget != None)
-    {
-        Controller.Target = NextChargeTarget;
-        Controller.Enemy = NextChargeTarget;
-
-        GoToState('Charging');
-    }
-    else 
-    {
-        GoToState('');
-    }
-}
-
 /** Don't drop needle on this stage */
 simulated function NotifySyringeA()
 {
@@ -539,12 +593,12 @@ simulated function NotifySyringeC()
         if (CurrentNeedle != None)
         {
             AttachToBone(CurrentNeedle,'Rpalm_MedAttachment');
-            CurrentNeedle.Velocity = vect(-45,300,-90) >> Rotation;
+            CurrentNeedle.Velocity = vect(-45, 300, -90) >> Rotation;
             DropNeedle();
         }
     }
 
-    if (CombatStages[SyringeCount].bSpawnProjections)
+    if (CombatStages[SyringeCount].bSpawnPseudos)
     {
         SpawnPseudoSquad();
     }
@@ -566,10 +620,88 @@ simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
     }
 }
 
+/**
+ * Shield state activates when patriarch gets damaged
+ * Incoming damage is ignored in this state unless the player is commando
+ */
+state Shield
+{
+ignores ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, StopBurnFX;
+
+    function BeginState()
+    {
+        ZombieCrispDown();
+    }
+
+    function TakeDamage(
+        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, Class<DamageType> DamageType, optional int HitIndex)
+    {
+        // Only Commando can damage Patriarch in shield state
+        if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
+        {
+            Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
+        }
+    }
+
+Begin:
+    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', CombatStages[SyringeCount].ShieldDuration, true);
+    Sleep(CombatStages[SyringeCount].ShieldDuration);
+
+    GoToState('');
+}
+
+/** Teleport when patriarch is far enough from players */
+state Teleport
+{
+ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, StopBurnFX;
+
+    function BeginState()
+    {
+        ZombieCrispDown();
+    }
+
+    function TeleportToPlayers()
+    {
+        if (Controller.Enemy == None && !MonsterController(Controller).FindNewEnemy())
+        {
+            return;
+        }
+
+        Controller.Enemy.LastAnchor.Accept(self, self.Anchor);
+        MonsterController(Controller).ExecuteWhatToDoNext();
+    }
+
+Begin:
+    SetOverlayMaterial(Finalblend'KFX.StalkerGlow', 1.0, true);
+    TeleportToPlayers();
+
+    GoToState('');
+}
+
+/** Charge distance increased */
+state Charging
+{
+    function RangedAttack(Actor A)
+    {
+        if (VSize(A.Location - Location) > MaxChargeDistance && Level.TimeSeconds - LastForceChargeTime > 3.0)
+        {
+            GoToState('');
+        }
+        else
+        {
+            Global.RangedAttack(A);
+        }
+    }
+
+Begin:
+    Sleep(6);
+    GoToState('');
+}
+
 /** God mode + invisibility when escaping */
 state Escaping
 {
-ignores RangedAttack;
+ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, StopBurnFX;
 
     function BeginState()
     {
@@ -577,6 +709,8 @@ ignores RangedAttack;
         bBlockActors = false;
         bIgnoreEncroachers = true;
         MotionDetectorThreat = 0;
+
+        ZombieCrispDown();
     }
 
     function EndState()
@@ -588,12 +722,7 @@ ignores RangedAttack;
     }
 
     function TakeDamage(
-        int Damage, 
-        Pawn InstigatedBy, 
-        Vector Hitlocation, 
-        Vector Momentum, 
-        Class<DamageType> DamageType, 
-        optional int HitIndex)
+        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, Class<DamageType> DamageType, optional int HitIndex)
     {
         // Only Commando can damage Patriarch in invisible state
         if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
@@ -606,7 +735,7 @@ ignores RangedAttack;
 /** God mode + invisibility when healing */
 state Healing
 {
-ignores RangedAttack;
+ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, StopBurnFX;
 
     function BeginState()
     {
@@ -614,8 +743,10 @@ ignores RangedAttack;
         bBlockActors = false;
         bIgnoreEncroachers = true;
         MotionDetectorThreat = 0;
-        
-        if (!bCloaked) 
+
+        ZombieCrispDown();
+
+        if (!bCloaked)
         {
             CloakBoss();
         }
@@ -635,12 +766,7 @@ ignores RangedAttack;
     }
 
     function TakeDamage(
-        int Damage, 
-        Pawn InstigatedBy, 
-        Vector Hitlocation, 
-        Vector Momentum, 
-        Class<DamageType> DamageType, 
-        optional int HitIndex)
+        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, Class<DamageType> DamageType, optional int HitIndex)
     {
         // Only Commando can damage Patriarch in invisible state
         if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
@@ -648,13 +774,13 @@ ignores RangedAttack;
             Super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
         }
     }
+
 Begin:
     Sleep(GetAnimDuration('Heal'));
-
-    ChargeTargetAfterHealing();
+    GoToState('');
 }
 
-/** 
+/**
  * Constant chaingun fire + fire rate increased
  * Patriarch is moving during attack
  */
@@ -687,10 +813,10 @@ state FireChaingun
         else
         {
             SetGroundSpeed(GetOriginalGroundSpeed());
-        } 
+        }
     }
 
-    function AnimEnd(int Channel)
+    simulated function AnimEnd(int Channel)
     {
         if (MGFireCounter <= 0)
         {
@@ -703,10 +829,36 @@ state FireChaingun
         else if (bMovingChaingunAttack)
         {
             if (bFireAtWill && Channel != 1)
+            {
                 return;
+            }
+
+            if (Controller.Enemy != None)
+            {
+                if (Controller.LineOfSightTo(Controller.Enemy) &&
+                    FastTrace(GetBoneCoords('tip').Origin, Controller.Enemy.Location))
+                {
+                    MGLostSightTimeout = 0.0;
+                    Controller.Focus = Controller.Enemy;
+                    Controller.FocalPoint = Controller.Enemy.Location;
+                }
+                else
+                {
+                    MGLostSightTimeout = Level.TimeSeconds + (0.25 + FRand() * 0.35);
+                    Controller.Focus = None;
+                }
+                Controller.Target = Controller.Enemy;
+            }
+            else
+            {
+                MGLostSightTimeout = Level.TimeSeconds + (0.25 + FRand() * 0.35);
+                Controller.Focus = None;
+            }
 
             if (Controller.Target != None)
+            {
                 Controller.Focus = Controller.Target;
+            }
 
             bShotAnim = false;
             bFireAtWill = true;
@@ -730,12 +882,15 @@ Begin:
             HandleWaitForAnim('FireEndMG');
             GoToState('');
         }
-
-        if (bFireAtWill)
+        else
         {
-            FireMGShot();
+            if (bFireAtWill)
+            {
+                FireMGShot();
+            }
+
+            Sleep(CombatStages[SyringeCount].CGFireRate);
         }
-        Sleep(CombatStages[SyringeCount].CGFireRate);
     }
 }
 
@@ -754,7 +909,7 @@ state FireMissile
     function BeginState()
     {
         MissileShotsLeft = CombatStages[SyringeCount].RLShots + Rand(3);
-        Acceleration = vect(0,0,0);
+        Acceleration = vect(0, 0, 0);
     }
 
     function EndState()
@@ -762,7 +917,7 @@ state FireMissile
         MissileShotsLeft = 0;
     }
 
-    function AnimEnd(int Channel)
+    simulated function AnimEnd(int Channel)
     {
         local Vector Start;
         local Rotator R;
@@ -795,19 +950,18 @@ state FireMissile
         Acceleration = vect(0, 0, 0);
         SetAnimAction('FireEndMissile');
         HandleWaitForAnim('FireEndMissile');
-
-        // Randomly send out a message about Patriarch shooting a rocket(5% chance)
+        
         if (FRand() < 0.05 && Controller.Enemy != None && PlayerController(Controller.Enemy.Controller) != None)
         {
             PlayerController(Controller.Enemy.Controller).Speech('AUTO', 10, "");
         }
-        
+
         MissileShotsLeft--;
         if (MissileShotsLeft > 0)
         {
             GoToState(, 'NextShot');
         }
-        else 
+        else
         {
             GoToState('');
         }
@@ -817,28 +971,35 @@ Begin:
     while (true)
     {
         Acceleration = vect(0, 0, 0);
-        Sleep(0.1);
+        Sleep(GetAnimDuration('PreFireMissile'));
     }
+
 NextShot:
     Acceleration = vect(0, 0, 0);
     Sleep(CombatStages[SyringeCount].RLFireRate);
     AnimEnd(0);
 }
 
-defaultproperties 
+/** No zapped behaviour */
+function SetZapped(float ZapAmount, Pawn Instigator) {}
+
+simulated function SetZappedBehavior() {}
+simulated function UnSetZappedBehavior() {}
+
+defaultproperties
 {
     MenuName="N7 Patriarch"
-    CombatStages(0)=(bCanKite=true,bSpawnProjections=false,CGShots=75,RLShots=1,CGFireRate=0.05,RLFireRate=0.75)
-    CombatStages(1)=(bCanKite=false,bSpawnProjections=false,CGShots=100,RLShots=1,CGFireRate=0.04,RLFireRate=0.75)
-    CombatStages(2)=(bCanKite=false,bSpawnProjections=false,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.5)
-    CombatStages(3)=(bCanKite=false,bSpawnProjections=true,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.25)
-    ClawMeleeDamageRange=75 // Claw damage range seemed a little too much
-    ImpaleMeleeDamageRange=100.000000 // Impale attack had way too little damage range (45)
-    ZappedDamageMod=1.00
-    ZapResistanceScale=2.0
-    ZappedSpeedMod=0.8
-    MinPseudoSquadSize=2
-    MaxPseudoSquadSize=5
+
+    CombatStages(0)=(bCanKite=true,KiteChance=1.0,bSpawnPseudos=false,MinPseudos=0,MaxPseudos=0,CGShots=75,RLShots=1,CGFireRate=0.05,RLFireRate=0.5,bUseShield=false,ShieldChance=0.0,ShieldDuration=0.0,bUseTeleport=false,TeleportChance=0.0)
+    CombatStages(1)=(bCanKite=false,KiteChance=0.35,bSpawnPseudos=false,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=1,CGFireRate=0.04,RLFireRate=0.4,bUseShield=false,ShieldChance=0.0,ShieldDuration=0.0,bUseTeleport=false,TeleportChance=0.0)
+    CombatStages(2)=(bCanKite=false,KiteChance=0.2,bSpawnPseudos=false,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.3,bUseShield=true,ShieldChance=0.05,ShieldDuration=1.0,bUseTeleport=false,TeleportChance=0.0)
+    CombatStages(3)=(bCanKite=false,KiteChance=0.1,bSpawnPseudos=true,MinPseudos=3,MaxPseudos=5,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.2,bUseShield=true,ShieldChance=0.05,ShieldDuration=2.0,bUseTeleport=true,TeleportChance=0.1)
+
+    MinChargeDistance=700
+    MaxChargeDistance=1250
+    DamageToChargeThreshold=1000
+    ClawMeleeDamageRange=75
+    ImpaleMeleeDamageRange=90.000000
     PseudoClass=Class'N7ZedsMut.N7_PseudoBoss'
     DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmPatriarch'
     DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegPatriarch'

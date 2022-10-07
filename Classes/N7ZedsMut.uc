@@ -8,7 +8,7 @@ class N7ZedsMut extends Engine.Mutator
 var const Class<KFMonstersCollection> InitialMonstersCollection;
 var const Class<KFMonstersCollection> N7MonstersCollection;
 
-var() globalconfig bool 
+var() config bool
     bEnableAutoReplacement,
     bReplaceClot, 
     bReplaceCrawler,

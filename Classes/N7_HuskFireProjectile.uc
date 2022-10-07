@@ -9,7 +9,7 @@ simulated singular function Touch(Actor Other)
         return;
 
     LastTouched = Other;
-    if (Velocity == vect(0,0,0) || Other.IsA('Mover'))
+    if (Velocity == vect(0, 0, 0) || Other.IsA('Mover'))
     {
         ProcessTouch(Other,Location);
         LastTouched = None;
@@ -33,11 +33,16 @@ simulated singular function Touch(Actor Other)
 /* Based on KFMod.LAWProj.ProcessTouch */
 simulated function ProcessTouch(Actor Other, Vector HitLocation)
 {
+    // Small chance ZEDs get hit by husk fireball
+    if (FRand() > 0.05 && (ExtendedZCollision(Other) != None || Other.IsA('KFMonster')))
+    {
+        return;
+    }
+
     if (
         Other == None 
         || Other == Instigator 
         || Other.Base == Instigator
-        || Other.IsA('KFMonster') // Taken from SuperZombieMut
         || KFBulletWhipAttachment(Other) != None
     ) {
         return;
@@ -54,13 +59,13 @@ simulated function ProcessTouch(Actor Other, Vector HitLocation)
         {
             if (Role == ROLE_Authority)
             {
-                AmbientSound=none;
+                AmbientSound = None;
                 PlaySound(Sound'ProjectileSounds.PTRD_deflect04',, 2.0);
                 Other.TakeDamage(ImpactDamage, Instigator, HitLocation, Normal(Velocity), ImpactDamageType);
             }
 
             bDud = true;
-            Velocity = vect(0,0,0);
+            Velocity = vect(0, 0, 0);
             LifeSpan = 1.0;
             SetPhysics(PHYS_Falling);
         }

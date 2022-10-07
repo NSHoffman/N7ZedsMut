@@ -102,8 +102,6 @@ defaultproperties
 {
     MenuName="N7 Fleshpound"
     DrawScale=1.050000
-    GroundSpeed=155.000000
-    WaterSpeed=145.000000
     DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmPound'
     DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegPound'
     DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadPound'

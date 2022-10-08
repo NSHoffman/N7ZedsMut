@@ -42,4 +42,5 @@ function bool FireWeaponAt(Actor A)
     return False;
 }
 
-defaultProperties {}
+defaultProperties 
+{}

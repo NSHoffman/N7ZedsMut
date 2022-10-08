@@ -20,9 +20,9 @@ defaultProperties
     MenuName="N7 Siren"
     ShakeEffectScalar=4.500000
     MinShakeEffectScale=3.250000
-    ScreamDamageType=Class'N7ZedsMut.N7_SirenScreamDamage'
-    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegSiren'
-    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadSiren'
+    ScreamDamageType=class'N7_SirenScreamDamage'
+    DetachedLegClass=class'N7_SeveredLegSiren'
+    DetachedHeadClass=class'N7_SeveredHeadSiren'
     Skins(0)=FinalBlend'KF_Specimens_Trip_N7.siren_hair_fb'
     Skins(1)=Combiner'KF_Specimens_Trip_N7.siren_cmb'
 }

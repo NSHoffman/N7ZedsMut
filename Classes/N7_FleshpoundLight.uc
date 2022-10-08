@@ -1,4 +1,4 @@
-class N7_FleshpoundLight extends Light;
+class N7_FleshpoundLight extends Engine.Light;
 
 function ChangeToRed() 
 {

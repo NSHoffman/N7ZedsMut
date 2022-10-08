@@ -5,7 +5,7 @@ class N7_Stalker extends KFChar.ZombieStalker_STANDARD;
  * a squad of pseudos, projections
  * that get killed if the host is dead
  */
-var Class<N7_Stalker> PseudoClass;
+var class<N7_Stalker> PseudoClass;
 var Array<N7_Stalker> PseudoSquad;
 
 var int MinPseudoSquadSize;
@@ -298,7 +298,7 @@ simulated function SetZappedBehavior()
     }
 }
 
-simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
+simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
 {
     super.PlayDying(DamageType, HitLoc);
 
@@ -336,10 +336,10 @@ defaultProperties
     WaterSpeed=190.000000
     MinPseudoSquadSize=0
     MaxPseudoSquadSize=3
-    PseudoClass=Class'N7ZedsMut.N7_PseudoStalker'
-    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmStalker'
-    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegStalker'
-    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadStalker'
+    PseudoClass=class'N7_PseudoStalker'
+    DetachedArmClass=class'N7_SeveredArmStalker'
+    DetachedLegClass=class'N7_SeveredLegStalker'
+    DetachedHeadClass=class'N7_SeveredHeadStalker'
     Skins(0)=Shader'KF_Specimens_Trip_N7.stalker_invisible'
     Skins(1)=Shader'KF_Specimens_Trip_N7.stalker_invisible'
 }

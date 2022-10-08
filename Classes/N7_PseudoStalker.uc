@@ -66,7 +66,7 @@ function PlayHit(
     float Damage, 
     Pawn InstigatedBy, 
     Vector HitLocation, 
-    Class<DamageType> damageType, 
+    class<DamageType> damageType, 
     Vector Momentum, 
     optional int HitIdx)
 {
@@ -140,7 +140,7 @@ function PlayHit(
      */
 }
 
-simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
+simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
 {
     AmbientSound = None;
     bCanTeleport = False;

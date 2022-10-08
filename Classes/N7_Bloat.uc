@@ -10,8 +10,8 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 defaultProperties
 {
     MenuName="N7 Bloat"
-    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmBloat'
-    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegBloat'
-    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadBloat'
+    DetachedArmClass=class'N7_SeveredArmBloat'
+    DetachedLegClass=class'N7_SeveredLegBloat'
+    DetachedHeadClass=class'N7_SeveredHeadBloat'
     Skins(0)=Combiner'KF_Specimens_Trip_N7.bloat_cmb'
 }

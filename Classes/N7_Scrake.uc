@@ -64,9 +64,9 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 defaultProperties
 {
     MenuName="N7 Scrake"
-    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmScrake'
-    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegScrake'
-    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadScrake'
+    DetachedArmClass=class'N7_SeveredArmScrake'
+    DetachedLegClass=class'N7_SeveredLegScrake'
+    DetachedHeadClass=class'N7_SeveredHeadScrake'
     Skins(0)=Shader'KF_Specimens_Trip_N7.scrake_FB'
     Skins(1)=TexPanner'KF_Specimens_Trip_N7.scrake_saw_panner'
 }

@@ -6,14 +6,14 @@ state WaitForAnim
     {
         if (Pawn != None)
         {
-            Pawn.AccelRate = Pawn.Default.AccelRate;    
+            Pawn.AccelRate = Pawn.default.AccelRate;    
             /**
              * Prevent Gorefast from getting back to
              * its original ground speed after attacking 
              */
             if (!Pawn.IsInState('RunningState'))
             {
-                Pawn.GroundSpeed = Pawn.Default.GroundSpeed;
+                Pawn.GroundSpeed = Pawn.default.GroundSpeed;
             }
         }
         bUseFreezeHack = False;

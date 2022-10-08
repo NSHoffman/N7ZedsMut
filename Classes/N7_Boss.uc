@@ -65,7 +65,7 @@ var float LastDamagedTime;
  * a squad of pseudos, projections
  * that get killed if the host is dead
  */
-var Class<N7_Boss> PseudoClass;
+var class<N7_Boss> PseudoClass;
 var Array<N7_Boss> PseudoSquad;
 
 var bool bMovingChaingunAttack;
@@ -223,7 +223,7 @@ simulated function CloakBoss()
     {
         for (C = Level.ControllerList; C != None; C = C.NextController)
         {
-            if (C.bIsPlayer && C.Enemy == Self)
+            if (C.bIsPlayer && C.Enemy == self)
             {
                 C.Enemy = None;
             }
@@ -408,7 +408,7 @@ function bool ShouldChargeFromDamage()
 }
 
 function TakeDamage(
-    int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, Class<DamageType> DamageType, optional int HitIndex)
+    int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> DamageType, optional int HitIndex)
 {
     local int OldHealth;
     local float DamagerDistSq;
@@ -494,7 +494,7 @@ function ClawDamageTarget()
     else if (Controller != None)
     {
         OldTarget = Controller.Target;
-        foreach DynamicActors(Class'KFHumanPawn', P)
+        foreach DynamicActors(class'KFMod.KFHumanPawn', P)
         {
             if ((P.Location - Location) dot PushDir > 0.0)
             {
@@ -505,7 +505,7 @@ function ClawDamageTarget()
         Controller.Target = OldTarget;
     }
 
-    MeleeRange = Default.MeleeRange;
+    MeleeRange = default.MeleeRange;
 
     /**
      * Kite fix: charge if melee attack didn't hit the target
@@ -588,7 +588,7 @@ simulated function NotifySyringeC()
 {
     if (Level.NetMode != NM_DedicatedServer)
     {
-        CurrentNeedle = Spawn(Class'BossHPNeedle');
+        CurrentNeedle = Spawn(class'KFChar.BossHPNeedle');
 
         if (CurrentNeedle != None)
         {
@@ -604,7 +604,7 @@ simulated function NotifySyringeC()
     }
 }
 
-simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
+simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
 {
     super.PlayDying(DamageType, HitLoc);
 
@@ -634,7 +634,7 @@ ignores ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, St
     }
 
     function TakeDamage(
-        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, Class<DamageType> DamageType, optional int HitIndex)
+        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> DamageType, optional int HitIndex)
     {
         // Only Commando can damage Patriarch in shield state
         if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
@@ -722,7 +722,7 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
     }
 
     function TakeDamage(
-        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, Class<DamageType> DamageType, optional int HitIndex)
+        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> DamageType, optional int HitIndex)
     {
         // Only Commando can damage Patriarch in invisible state
         if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
@@ -766,7 +766,7 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
     }
 
     function TakeDamage(
-        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, Class<DamageType> DamageType, optional int HitIndex)
+        int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> DamageType, optional int HitIndex)
     {
         // Only Commando can damage Patriarch in invisible state
         if (KFHumanPawn(InstigatedBy) != None && KFHumanPawn(InstigatedBy).ShowStalkers())
@@ -931,8 +931,8 @@ state FireMissile
 
         if (!SavedFireProperties.bInitialized)
         {
-            SavedFireProperties.AmmoClass = Class'SkaarjAmmo';
-            SavedFireProperties.ProjectileClass = Class'N7_BossLAWProj';
+            SavedFireProperties.AmmoClass = class'Old2K4.SkaarjAmmo';
+            SavedFireProperties.ProjectileClass = class'N7_BossLAWProj';
             SavedFireProperties.WarnTargetPct = 0.15;
             SavedFireProperties.MaxRange = 10000;
             SavedFireProperties.bTossed = False;
@@ -944,7 +944,7 @@ state FireMissile
 
         R = AdjustAim(SavedFireProperties, Start, 100);
         PlaySound(RocketFireSound, SLOT_Interact, 2.0,, TransientSoundRadius,, False);
-        Spawn(Class'N7_BossLAWProj',,, Start, R);
+        Spawn(class'N7_BossLAWProj',,, Start, R);
 
         bShotAnim = True;
         Acceleration = vect(0, 0, 0);
@@ -1000,11 +1000,11 @@ defaultproperties
     DamageToChargeThreshold=1000
     ClawMeleeDamageRange=75
     ImpaleMeleeDamageRange=90.000000
-    PseudoClass=Class'N7ZedsMut.N7_PseudoBoss'
-    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmPatriarch'
-    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegPatriarch'
-    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadPatriarch'
-    DetachedSpecialArmClass=Class'N7ZedsMut.N7_SeveredRocketArmPatriarch'
+    PseudoClass=class'N7_PseudoBoss'
+    DetachedArmClass=class'N7_SeveredArmPatriarch'
+    DetachedLegClass=class'N7_SeveredLegPatriarch'
+    DetachedHeadClass=class'N7_SeveredHeadPatriarch'
+    DetachedSpecialArmClass=class'N7_SeveredRocketArmPatriarch'
     Skins(0)=Combiner'KF_Specimens_Trip_N7.gatling_cmb'
     Skins(1)=Combiner'KF_Specimens_Trip_N7.patriarch_cmb'
 }

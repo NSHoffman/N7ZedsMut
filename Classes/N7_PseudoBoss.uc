@@ -70,7 +70,7 @@ function PlayHit(
     float Damage, 
     Pawn InstigatedBy, 
     Vector HitLocation, 
-    Class<DamageType> damageType, 
+    class<DamageType> damageType, 
     Vector Momentum, 
     optional int HitIdx)
 {
@@ -147,13 +147,13 @@ function PlayHit(
 /** Get rid of slomo and endgame state transition */
 function Died(
     Controller Killer, 
-    Class<DamageType> DamageType, 
+    class<DamageType> DamageType, 
     Vector HitLocation)
 {
     super(KFMonster).Died(Killer, DamageType, HitLocation);
 }
 
-simulated function PlayDying(Class<DamageType> DamageType, Vector HitLoc)
+simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
 {
     AmbientSound = None;
     bCanTeleport = False;

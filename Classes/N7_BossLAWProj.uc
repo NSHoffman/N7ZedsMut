@@ -1,4 +1,4 @@
-class N7_BossLAWProj extends BossLAWProj;
+class N7_BossLAWProj extends KFChar.BossLAWProj;
 
 #exec obj load file="KF_LAWSnd.uax"
 #exec obj load file="KillingFloorStatics.usx"

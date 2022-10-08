@@ -6,7 +6,7 @@ var const float MaxFireInterval;
 
 /**
  * For some reason original function used to 
- * explicitly override HuskFireProjClass to Class'HuskFireProjectile'
+ * explicitly override HuskFireProjClass to class'KFChar.HuskFireProjectile'
  */
 function SpawnTwoShots()
 {
@@ -16,7 +16,7 @@ function SpawnTwoShots()
 
     if (Controller != None && KFDoorMover(Controller.Target) != None)
     {
-        Controller.Target.TakeDamage(22, Self, Location, vect(0, 0, 0), Class'DamTypeBurned');
+        Controller.Target.TakeDamage(22, self, Location, vect(0, 0, 0), class'KFMod.DamTypeBurned');
         return;
     }
 
@@ -25,7 +25,7 @@ function SpawnTwoShots()
 
     if (!SavedFireProperties.bInitialized)
     {
-        SavedFireProperties.AmmoClass = Class'SkaarjAmmo';
+        SavedFireProperties.AmmoClass = class'Old2K4.SkaarjAmmo';
         SavedFireProperties.ProjectileClass = HuskFireProjClass;
         SavedFireProperties.WarnTargetPct = 1;
         SavedFireProperties.MaxRange = 65535;
@@ -40,7 +40,7 @@ function SpawnTwoShots()
     ToggleAuxCollision(False);
     FireRotation = Controller.AdjustAim(SavedFireProperties, FireStart, 0);
 
-    foreach DynamicActors(class'KFMonsterController', KFMonstControl)
+    foreach DynamicActors(class'KFMod.KFMonsterController', KFMonstControl)
     {
         if (KFMonstControl != Controller)
         {
@@ -50,7 +50,7 @@ function SpawnTwoShots()
             }
         }
     }
-    Spawn(HuskFireProjClass, Self,, FireStart, FireRotation);
+    Spawn(HuskFireProjClass, self,, FireStart, FireRotation);
     // Turn extra collision back on
     ToggleAuxCollision(True);
 }
@@ -170,10 +170,10 @@ defaultProperties
     MinFireInterval=1.000000
     MaxFireInterval=3.500000
     ProjectileFireInterval=10.00000
-    HuskFireProjClass=Class'N7ZedsMut.N7_HuskFireProjectile'
-    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmHusk'
-    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegHusk'
-    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadHusk'
+    HuskFireProjClass=class'N7_HuskFireProjectile'
+    DetachedArmClass=class'N7_SeveredArmHusk'
+    DetachedLegClass=class'N7_SeveredLegHusk'
+    DetachedHeadClass=class'N7_SeveredHeadHusk'
     Skins(0)=Texture'KF_Specimens_Trip_N7_Two.burns.burns_tatters'
     Skins(1)=Shader'KF_Specimens_Trip_N7_Two.burns.burns_shdr'
 }

@@ -5,8 +5,8 @@ class N7ZedsMut extends Engine.Mutator
 #exec OBJ LOAD FILE=KF_Specimens_Trip_N7_Two.utx
 #exec OBJ LOAD FILE=kf_gore_n7_sm.usx
 
-var const Class<KFMonstersCollection> InitialMonstersCollection;
-var const Class<KFMonstersCollection> N7MonstersCollection;
+var const class<KFMonstersCollection> InitialMonstersCollection;
+var const class<KFMonstersCollection> N7MonstersCollection;
 
 var() config bool
     bEnableAutoReplacement,
@@ -37,7 +37,7 @@ simulated event PostBeginPlay() {
         return;
     }
 
-    if (KFGT.MonsterCollection == Class'KFGameType'.default.MonsterCollection) 
+    if (KFGT.MonsterCollection == class'KFMod.KFGameType'.default.MonsterCollection) 
     {
         SetupMonsterCollection(KFGT);
     }
@@ -225,8 +225,8 @@ defaultproperties
     Description="Adds some changes to zeds behaviour making them more aggressive"
     GroupName="KFN7ZedsMut"
 
-    InitialMonstersCollection=Class'KFMod.KFMonstersCollection'
-    N7MonstersCollection=Class'N7ZedsMut.N7_MonstersCollection'
+    InitialMonstersCollection=class'KFMod.KFMonstersCollection'
+    N7MonstersCollection=class'N7_MonstersCollection'
     
     bEnableAutoReplacement=True
 

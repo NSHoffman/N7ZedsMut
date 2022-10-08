@@ -1,4 +1,4 @@
-class N7_FleshpoundGlowing extends ZombieFleshpound_STANDARD;
+class N7_FleshpoundGlowing extends KFChar.ZombieFleshpound_STANDARD;
 
 var N7_FleshpoundLight TemperLight;
 
@@ -38,7 +38,4 @@ simulated function Destroyed() {
 }
 
 defaultproperties
-{
-    EventClasses(0)="KFChar.ZombieFleshpound_STANDARD"
-    ControllerClass=Class'KFChar.FleshpoundZombieController'
-}
+{}

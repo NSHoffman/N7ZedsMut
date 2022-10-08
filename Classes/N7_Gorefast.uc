@@ -107,9 +107,9 @@ defaultProperties
     ChargeSpeedModifier=1.875
     GroundSpeed=140.000000
     RageDistance=1000
-    ControllerClass=Class'N7ZedsMut.N7_GorefastController'
-    DetachedArmClass=Class'N7ZedsMut.N7_SeveredArmGorefast'
-    DetachedLegClass=Class'N7ZedsMut.N7_SeveredLegGorefast'
-    DetachedHeadClass=Class'N7ZedsMut.N7_SeveredHeadGorefast'
+    ControllerClass=class'N7_GorefastController'
+    DetachedArmClass=class'N7_SeveredArmGorefast'
+    DetachedLegClass=class'N7_SeveredLegGorefast'
+    DetachedHeadClass=class'N7_SeveredHeadGorefast'
     Skins(0)=Combiner'KF_Specimens_Trip_N7.gorefast_cmb'
 }

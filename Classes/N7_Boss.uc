@@ -52,6 +52,7 @@ var int MissileShotsLeft;
 
 var int MinChargeDistance;
 var int MaxChargeDistance;
+var int TeleportDistance;
 
 var int DamageToChargeThreshold;
 var int DamageToCharge;
@@ -323,18 +324,18 @@ function RangedAttack(Actor A)
         GoToState('SneakAround');
     }
 
-    else if (bChargingPlayer && (bOnlyE || D < 200))
-    {
-        return;
-    }
-
     else if (
-       !bDesireChainGun && !bChargingPlayer && D > 1750 &&
+       !bDesireChainGun && D > TeleportDistance &&
        CombatStages[SyringeCount].bUseTeleport && FRand() <= CombatStages[SyringeCount].TeleportChance &&
        Level.TimeSeconds - LastTeleportTime > 20.0)
     {
         LastTeleportTime = Level.TimeSeconds;
         GoToState('Teleport');
+    }
+
+    else if (bChargingPlayer && (bOnlyE || D < 200))
+    {
+        return;
     }
 
     else if (
@@ -992,11 +993,12 @@ defaultproperties
 
     CombatStages(0)=(bCanKite=True,KiteChance=1.0,bSpawnPseudos=False,MinPseudos=0,MaxPseudos=0,CGShots=75,RLShots=1,CGFireRate=0.05,RLFireRate=0.5,bUseShield=False,ShieldChance=0.0,ShieldDuration=0.0,bUseTeleport=False,TeleportChance=0.0)
     CombatStages(1)=(bCanKite=False,KiteChance=0.35,bSpawnPseudos=False,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=1,CGFireRate=0.04,RLFireRate=0.4,bUseShield=False,ShieldChance=0.0,ShieldDuration=0.0,bUseTeleport=False,TeleportChance=0.0)
-    CombatStages(2)=(bCanKite=False,KiteChance=0.2,bSpawnPseudos=False,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.3,bUseShield=True,ShieldChance=0.05,ShieldDuration=1.0,bUseTeleport=False,TeleportChance=0.0)
-    CombatStages(3)=(bCanKite=False,KiteChance=0.1,bSpawnPseudos=True,MinPseudos=3,MaxPseudos=5,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.2,bUseShield=True,ShieldChance=0.05,ShieldDuration=2.0,bUseTeleport=True,TeleportChance=0.1)
+    CombatStages(2)=(bCanKite=False,KiteChance=0.2,bSpawnPseudos=False,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.3,bUseShield=True,ShieldChance=0.05,ShieldDuration=1.0,bUseTeleport=True,TeleportChance=0.1)
+    CombatStages(3)=(bCanKite=False,KiteChance=0.1,bSpawnPseudos=True,MinPseudos=3,MaxPseudos=5,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.2,bUseShield=True,ShieldChance=0.05,ShieldDuration=2.0,bUseTeleport=True,TeleportChance=0.15)
 
-    MinChargeDistance=700
-    MaxChargeDistance=1250
+    MinChargeDistance=800
+    MaxChargeDistance=1500
+    TeleportDistance=1250
     DamageToChargeThreshold=1000
     ClawMeleeDamageRange=75
     ImpaleMeleeDamageRange=90.000000

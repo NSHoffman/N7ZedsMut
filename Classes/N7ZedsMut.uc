@@ -24,11 +24,6 @@ var() config bool
 simulated event PostBeginPlay() {
     local KFGameType KFGT;
 
-    if (!bEnableAutoReplacement) 
-    {
-        return;
-    }
-
     KFGT = KFGameType(Level.Game);
 
     if (KFGT == None) 
@@ -37,7 +32,7 @@ simulated event PostBeginPlay() {
         return;
     }
 
-    if (KFGT.MonsterCollection == class'KFMod.KFGameType'.default.MonsterCollection) 
+    if (bEnableAutoReplacement && KFGT.MonsterCollection == class'KFMod.KFGameType'.default.MonsterCollection) 
     {
         SetupMonsterCollection(KFGT);
     }

@@ -2,7 +2,7 @@ class N7_FleshpoundGlowing extends KFChar.ZombieFleshpound_STANDARD;
 
 var N7_FleshpoundLight TemperLight;
 
-simulated function PostNetBeginPlay()
+simulated function PostBeginPlay()
 {
     TemperLight = Spawn(class'N7_FleshpoundLight', self);
 
@@ -12,7 +12,7 @@ simulated function PostNetBeginPlay()
         TemperLight.SetRelativeLocation(vect(5, -35, 0));
     }
 
-    super.PostNetBeginPlay();
+    super.PostBeginPlay();
 }
 
 // changes colors on Device (notified in anim)

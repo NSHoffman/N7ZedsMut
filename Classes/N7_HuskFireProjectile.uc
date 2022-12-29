@@ -33,8 +33,7 @@ simulated singular function Touch(Actor Other)
 /* Based on KFMod.LAWProj.ProcessTouch */
 simulated function ProcessTouch(Actor Other, Vector HitLocation)
 {
-    // Small chance ZEDs get hit by husk fireball
-    if (FRand() > 0.05 && (ExtendedZCollision(Other) != None || Other.IsA('KFMonster')))
+    if (ExtendedZCollision(Other) != None || Other.IsA('KFMonster'))
     {
         return;
     }
@@ -75,7 +74,6 @@ simulated function ProcessTouch(Actor Other, Vector HitLocation)
 
 defaultProperties
 {
-    Damage=30.000000
     DamageRadius=200.000000
     MaxSpeed=3000.000000
     Speed=2500.000000

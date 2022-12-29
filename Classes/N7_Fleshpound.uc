@@ -101,7 +101,6 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 defaultproperties
 {
     MenuName="N7 Fleshpound"
-    DrawScale=1.050000
     DetachedArmClass=class'N7_SeveredArmPound'
     DetachedLegClass=class'N7_SeveredLegPound'
     DetachedHeadClass=class'N7_SeveredHeadPound'

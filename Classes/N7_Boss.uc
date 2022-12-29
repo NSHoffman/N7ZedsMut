@@ -403,27 +403,102 @@ function DoorAttack(Actor A)
 function bool ShouldChargeFromDamage()
 {
     return !bChargingPlayer
-        && SyringeCount < 3
-        && Health > HealingLevels[SyringeCount] 
+        && (SyringeCount == 3 || Health >= HealingLevels[SyringeCount]) 
         && DamageToCharge > DamageToChargeThreshold;
 }
 
+/**
+ * ZombieBoss::TakeDamage overridden
+ * due to various bugs
+ */
 function TakeDamage(
-    int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> DamageType, optional int HitIndex)
+    int Damage, 
+    Pawn InstigatedBy, 
+    Vector Hitlocation, 
+    Vector Momentum, 
+    class<DamageType> DamageType, 
+    optional int HitIndex)
 {
-    local int OldHealth;
-    local float DamagerDistSq;
+	local KFHumanPawn P;
+    local float DamagerDistSq, UsedPipeBombDamScale;
+	local int OldHealth, NumPlayersSurrounding;
+	local bool bDidRadialAttack;
 
     // Ignore damage instigated by other ZEDs
     if (KFMonster(InstigatedBy) == None)
     {
-        OldHealth = Health;
-        super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType, HitIndex);
+        // Melee Exploiters check (from ZombieBoss::TakeDamage)
+        if (Level.TimeSeconds - LastMeleeExploitCheckTime > 1.0 && 
+            (class<DamTypeMelee>(DamageType) != None || class<KFProjectileWeaponDamageType>(DamageType) != None))
+        {
+            LastMeleeExploitCheckTime = Level.TimeSeconds;
 
+            NumLumberJacks = 0;
+            NumNinjas = 0;
+
+            foreach DynamicActors(class'KFHumanPawn', P)
+            {
+                // look for guys attacking us within 3 meters
+                if (VSize(P.Location - Location) < 150)
+                {
+                    NumPlayersSurrounding++;
+
+                    if (P != None && P.Weapon != None)
+                    {
+                        if (Axe(P.Weapon) != None || Chainsaw(P.Weapon) != None)
+                        {
+                            NumLumberJacks++;
+                        }
+                        else if (Katana(P.Weapon) != None)
+                        {
+                            NumNinjas++;
+                        }
+                    }
+
+                    if (!bDidRadialAttack && NumPlayersSurrounding >= 3)
+                    {
+                        bDidRadialAttack = True;
+                        GotoState('RadialAttack');
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (class<DamTypeCrossbow>(DamageType) == None && class<DamTypeCrossbowHeadShot>(DamageType) == None)
+        {
+            bOnlyDamagedByCrossbow = False;
+        }
+
+        // Pipe bombs damage scaling to prevent killing pat in a single blow (from ZombieBoss::TakeDamage)
+        if (class<DamTypePipeBomb>(DamageType) != None)
+        {
+            UsedPipeBombDamScale = FMax(0, 1.0 - PipeBombDamageScale);
+            PipeBombDamageScale += 0.075;
+
+            if (PipeBombDamageScale > 1.0) PipeBombDamageScale = 1.0;
+
+            Damage *= UsedPipeBombDamScale;
+        }
+
+        OldHealth = Health;
+        super(KFMonster).TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType);
+
+        if (Health <= 0 || 
+            IsInState('Escaping') && !IsInState('SneakAround') || 
+            IsInState('KnockDown') || 
+            IsInState('RadialAttack') || 
+            bDidRadialAttack)
+        {
+            return;
+        }
+
+        // Charging from damage (implementation in ZombieBoss::TakeDamage doesn't work properly)
         if (LastDamagedTime > 0 && Level.TimeSeconds - LastDamagedTime > 10.0)
         {
             DamageToCharge = 0;
         }
+
         DamageToCharge += OldHealth - Health;
         LastDamagedTime = Level.TimeSeconds;
 
@@ -439,6 +514,19 @@ function TakeDamage(
 
                 return;
             }
+        }
+
+        // Knockdown (from ZombieBoss::TakeDamage)
+        if (SyringeCount < 3 && Health < HealingLevels[SyringeCount])
+        {
+            bShotAnim = True;
+            Acceleration = vect(0, 0, 0);
+            SetAnimAction('KnockDown');
+            HandleWaitForAnim('KnockDown');
+            KFMonsterController(Controller).bUseFreezeHack = True;
+            GoToState('KnockDown');
+
+            return;
         }
 
         // Enable shield
@@ -682,6 +770,11 @@ Begin:
 /** Charge distance increased */
 state Charging
 {
+    function bool ShouldChargeFromDamage()
+    {
+        return False;
+    }
+
     function RangedAttack(Actor A)
     {
         if (VSize(A.Location - Location) > MaxChargeDistance && Level.TimeSeconds - LastForceChargeTime > 3.0)
@@ -867,6 +960,16 @@ state FireChaingun
         }
     }
 
+    simulated function bool HitCanInterruptAction()
+    {
+        return False;
+    }
+
+    function bool ShouldChargeFromDamage()
+    {
+        return False;
+    }
+
 Begin:
     while (True)
     {
@@ -968,6 +1071,16 @@ state FireMissile
         }
     }
 
+    simulated function bool HitCanInterruptAction()
+    {
+        return False;
+    }
+
+    function bool ShouldChargeFromDamage()
+    {
+        return False;
+    }
+
 Begin:
     while (True)
     {
@@ -996,8 +1109,10 @@ defaultproperties
     CombatStages(2)=(bCanKite=False,KiteChance=0.2,bSpawnPseudos=False,MinPseudos=0,MaxPseudos=0,CGShots=100,RLShots=2,CGFireRate=0.035,RLFireRate=0.3,bUseShield=True,ShieldChance=0.05,ShieldDuration=1.0,bUseTeleport=True,TeleportChance=0.1)
     CombatStages(3)=(bCanKite=False,KiteChance=0.1,bSpawnPseudos=True,MinPseudos=3,MaxPseudos=5,CGShots=125,RLShots=3,CGFireRate=0.03,RLFireRate=0.2,bUseShield=True,ShieldChance=0.05,ShieldDuration=2.0,bUseTeleport=True,TeleportChance=0.15)
 
-    MinChargeDistance=800
-    MaxChargeDistance=1500
+    Health=5000
+    HealthMax=5000.000000
+    MinChargeDistance=500
+    MaxChargeDistance=1000
     TeleportDistance=1250
     DamageToChargeThreshold=1000
     ClawMeleeDamageRange=75

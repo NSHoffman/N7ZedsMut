@@ -38,7 +38,7 @@ function SpawnTwoShots()
 
     // Turn off extra collision before spawning, otherwise spawn fails
     ToggleAuxCollision(False);
-    FireRotation = Controller.AdjustAim(SavedFireProperties, FireStart, 0);
+    FireRotation = Controller.AdjustAim(SavedFireProperties, FireStart, 100);
 
     foreach DynamicActors(class'KFMod.KFMonsterController', KFMonstControl)
     {
@@ -167,7 +167,7 @@ defaultProperties
     MenuName="N7 Husk"
     GroundSpeed=95.000000
     WaterSpeed=85.000000
-    MinFireInterval=1.000000
+    MinFireInterval=1.500000
     MaxFireInterval=3.500000
     ProjectileFireInterval=10.00000
     HuskFireProjClass=class'N7_HuskFireProjectile'

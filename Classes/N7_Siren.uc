@@ -14,39 +14,39 @@ simulated function HurtRadius(
     vector HitLocation)
 {
     local Actor Victim;
-	local Vector Dir;
+    local Vector Dir;
     local float DamageScale, Dist, UsedDamageAmount;
 
     if (bHurtEntry)
-		return;
+        return;
 
-	bHurtEntry = True;
+    bHurtEntry = True;
 
     foreach VisibleCollidingActors(class'Actor', Victim, DamageRadius, HitLocation)
-	{
+    {
         if (
             Victim != self && 
             !Victim.IsA('FluidSurfaceInfo') && 
             !Victim.IsA('KFMonster') && 
             !Victim.IsA('ExtendedZCollision'))
-		{
-			Dir = Victim.Location - HitLocation;
-			Dist = FMax(1, VSize(Dir));
-			Dir = Dir / Dist;
+        {
+            Dir = Victim.Location - HitLocation;
+            Dist = FMax(1, VSize(Dir));
+            Dir = Dir / Dist;
 
-			DamageScale = 1 - FMax(0, (Dist - Victim.CollisionRadius) / DamageRadius);
+            DamageScale = 1 - FMax(0, (Dist - Victim.CollisionRadius) / DamageRadius);
 
-			if (!Victim.IsA('KFHumanPawn')) // If it aint human, don't pull the vortex crap on it.
-				Momentum = 0;
+            if (!Victim.IsA('KFHumanPawn')) // If it aint human, don't pull the vortex crap on it.
+                Momentum = 0;
 
-			if (Victim.IsA('KFGlassMover'))   // Hack for shattering in interesting ways.
-				UsedDamageAmount = 100000;
-			else
+            if (Victim.IsA('KFGlassMover'))   // Hack for shattering in interesting ways.
+                UsedDamageAmount = 100000;
+            else
                 UsedDamageAmount = DamageAmount;
 
             if (!DisintegrateExplosive(Victim, HitLocation))
             {
-			    Victim.TakeDamage(
+                Victim.TakeDamage(
                     DamageScale * UsedDamageAmount, 
                     Instigator, 
                     Victim.Location - 0.5 * (Victim.CollisionHeight + Victim.CollisionRadius) * Dir,
@@ -57,7 +57,7 @@ simulated function HurtRadius(
 
             if (Instigator != None && Vehicle(Victim) != None && Vehicle(Victim).Health > 0)
             {
-				Vehicle(Victim).DriverRadiusDamage(
+                Vehicle(Victim).DriverRadiusDamage(
                     UsedDamageAmount, 
                     DamageRadius, 
                     Instigator.Controller, 
@@ -66,8 +66,8 @@ simulated function HurtRadius(
                     HitLocation
                 );
             }
-		}
-	}
+        }
+    }
 
     bHurtEntry = False;
 }

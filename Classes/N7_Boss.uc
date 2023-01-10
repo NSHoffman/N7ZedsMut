@@ -218,7 +218,7 @@ simulated function CloakBoss()
         return;
     }
 
-    Visibility = 0;
+    Visibility = 1;
     bCloaked = True;
     if (Level.NetMode != NM_Client)
     {
@@ -263,22 +263,6 @@ simulated function CloakBoss()
             }
         }
     }
-}
-
-simulated function ZombieCrispDown()
-{
-    bAshen = False;
-    bCrispified = False;
-
-    UnSetBurningBehavior();
-
-    if (Level.NetMode == NM_DedicatedServer)
-    {
-        return;
-    }
-
-    Skins[0] = default.Skins[0];
-    Skins[1] = default.Skins[1];
 }
 
 function RangedAttack(Actor A)
@@ -403,7 +387,7 @@ function DoorAttack(Actor A)
 function bool ShouldChargeFromDamage()
 {
     return !bChargingPlayer
-        && (SyringeCount == 3 || Health >= HealingLevels[SyringeCount]) 
+        && (SyringeCount == 3 || Health >= HealingLevels[SyringeCount])
         && DamageToCharge > DamageToChargeThreshold;
 }
 
@@ -412,23 +396,23 @@ function bool ShouldChargeFromDamage()
  * due to various bugs
  */
 function TakeDamage(
-    int Damage, 
-    Pawn InstigatedBy, 
-    Vector Hitlocation, 
-    Vector Momentum, 
-    class<DamageType> DamageType, 
+    int Damage,
+    Pawn InstigatedBy,
+    Vector Hitlocation,
+    Vector Momentum,
+    class<DamageType> DamageType,
     optional int HitIndex)
 {
-	local KFHumanPawn P;
+    local KFHumanPawn P;
     local float DamagerDistSq, UsedPipeBombDamScale;
-	local int OldHealth, NumPlayersSurrounding;
-	local bool bDidRadialAttack;
+    local int OldHealth, NumPlayersSurrounding;
+    local bool bDidRadialAttack;
 
     // Ignore damage instigated by other ZEDs
     if (KFMonster(InstigatedBy) == None)
     {
         // Melee Exploiters check (from ZombieBoss::TakeDamage)
-        if (Level.TimeSeconds - LastMeleeExploitCheckTime > 1.0 && 
+        if (Level.TimeSeconds - LastMeleeExploitCheckTime > 1.0 &&
             (class<DamTypeMelee>(DamageType) != None || class<KFProjectileWeaponDamageType>(DamageType) != None))
         {
             LastMeleeExploitCheckTime = Level.TimeSeconds;
@@ -484,10 +468,10 @@ function TakeDamage(
         OldHealth = Health;
         super(KFMonster).TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, DamageType);
 
-        if (Health <= 0 || 
-            IsInState('Escaping') && !IsInState('SneakAround') || 
-            IsInState('KnockDown') || 
-            IsInState('RadialAttack') || 
+        if (Health <= 0 ||
+            IsInState('Escaping') && !IsInState('SneakAround') ||
+            IsInState('KnockDown') ||
+            IsInState('RadialAttack') ||
             bDidRadialAttack)
         {
             return;
@@ -502,7 +486,7 @@ function TakeDamage(
         DamageToCharge += OldHealth - Health;
         LastDamagedTime = Level.TimeSeconds;
 
-        if (InstigatedBy != None && ShouldChargeFromDamage()) 
+        if (InstigatedBy != None && ShouldChargeFromDamage())
         {
             DamagerDistSq = VSizeSquared(Location - InstigatedBy.Location);
 
@@ -715,12 +699,7 @@ simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
  */
 state Shield
 {
-ignores ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, StopBurnFX;
-
-    function BeginState()
-    {
-        ZombieCrispDown();
-    }
+ignores StartBurnFX, StopBurnFX;
 
     function TakeDamage(
         int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> DamageType, optional int HitIndex)
@@ -742,12 +721,7 @@ Begin:
 /** Teleport when patriarch is far enough from players */
 state Teleport
 {
-ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, StopBurnFX;
-
-    function BeginState()
-    {
-        ZombieCrispDown();
-    }
+ignores RangedAttack, StartBurnFX, StopBurnFX;
 
     function TeleportToPlayers()
     {
@@ -795,7 +769,7 @@ Begin:
 /** God mode + invisibility when escaping */
 state Escaping
 {
-ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, StopBurnFX;
+ignores RangedAttack, StartBurnFX, StopBurnFX;
 
     function BeginState()
     {
@@ -803,8 +777,6 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
         bBlockActors = False;
         bIgnoreEncroachers = True;
         MotionDetectorThreat = 0;
-
-        ZombieCrispDown();
     }
 
     function EndState()
@@ -829,7 +801,7 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
 /** God mode + invisibility when healing */
 state Healing
 {
-ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, StartBurnFX, StopBurnFX;
+ignores RangedAttack, StartBurnFX, StopBurnFX;
 
     function BeginState()
     {
@@ -837,8 +809,6 @@ ignores RangedAttack, ZombieCrispUp, SetBurningBehavior, UnSetBurningBehavior, S
         bBlockActors = False;
         bIgnoreEncroachers = True;
         MotionDetectorThreat = 0;
-
-        ZombieCrispDown();
 
         if (!bCloaked)
         {
@@ -1054,7 +1024,7 @@ state FireMissile
         Acceleration = vect(0, 0, 0);
         SetAnimAction('FireEndMissile');
         HandleWaitForAnim('FireEndMissile');
-        
+
         if (FRand() < 0.05 && Controller.Enemy != None && PlayerController(Controller.Enemy.Controller) != None)
         {
             PlayerController(Controller.Enemy.Controller).Speech('AUTO', 10, "");
@@ -1099,6 +1069,9 @@ function SetZapped(float ZapAmount, Pawn Instigator) {}
 
 simulated function SetZappedBehavior() {}
 simulated function UnSetZappedBehavior() {}
+
+/** No crisping up */
+simulated function ZombieCrispUp() {}
 
 defaultproperties
 {

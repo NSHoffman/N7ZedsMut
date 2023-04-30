@@ -7,7 +7,7 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
     myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.fleshpound_diff');
 }
 
-defaultproperties
+defaultProperties
 {
     DetachedArmClass=class'N7_SeveredArmPound'
     DetachedLegClass=class'N7_SeveredLegPound'

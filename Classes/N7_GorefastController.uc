@@ -20,7 +20,7 @@ state WaitForAnim
     }
 }
 
-defaultproperties
+defaultProperties
 {
     StrafingAbility=0.7000000
 }

@@ -1,6 +1,6 @@
 class N7_MonstersCollection extends KFMod.KFMonstersCollection;
 
-defaultproperties
+defaultProperties
 {
     MonsterClasses(0)=(MClassName="N7ZedsMut.N7_Clot",Mid="A")
     MonsterClasses(1)=(MClassName="N7ZedsMut.N7_Crawler",Mid="B")

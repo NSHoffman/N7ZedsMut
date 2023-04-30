@@ -37,5 +37,5 @@ simulated function Destroyed() {
     }
 }
 
-defaultproperties
+defaultProperties
 {}

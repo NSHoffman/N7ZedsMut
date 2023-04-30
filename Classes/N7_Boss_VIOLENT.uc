@@ -77,7 +77,7 @@ simulated function CloakBoss()
     }
 }
 
-defaultproperties
+defaultProperties
 {
     DetachedArmClass=class'N7_SeveredArmPatriarch'
     DetachedLegClass=class'N7_SeveredLegPatriarch'

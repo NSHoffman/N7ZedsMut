@@ -91,7 +91,7 @@ simulated function PostNetReceive()
     }
 }
 
-defaultproperties
+defaultProperties
 {
     MenuName="N7 Fleshpound"
 }

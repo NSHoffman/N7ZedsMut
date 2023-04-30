@@ -1,6 +1,6 @@
 class N7_MonstersCollection_VIOLENT extends KFMod.KFMonstersCollection;
 
-defaultproperties
+defaultProperties
 {
     MonsterClasses(0)=(MClassName="N7ZedsMut.N7_Clot_VIOLENT",Mid="A")
     MonsterClasses(1)=(MClassName="N7ZedsMut.N7_Crawler_VIOLENT",Mid="B")

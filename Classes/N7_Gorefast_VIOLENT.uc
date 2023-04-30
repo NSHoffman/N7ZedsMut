@@ -7,7 +7,7 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
     myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_N7.gorefast_diff');
 }
 
-defaultproperties
+defaultProperties
 {
     ControllerClass=class'N7_GorefastController'
     DetachedArmClass=class'N7_SeveredArmGorefast'

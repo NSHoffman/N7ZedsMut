@@ -1073,7 +1073,7 @@ simulated function UnSetZappedBehavior() {}
 /** No crisping up */
 simulated function ZombieCrispUp() {}
 
-defaultproperties
+defaultProperties
 {
     MenuName="N7 Patriarch"
 

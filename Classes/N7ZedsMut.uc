@@ -220,7 +220,7 @@ function AdjustEndGameBoss()
     }
 }
 
-defaultproperties 
+defaultProperties 
 {
     FriendlyName="N7 Zeds"
     Description="Adds some changes to zeds behaviour making them more aggressive"

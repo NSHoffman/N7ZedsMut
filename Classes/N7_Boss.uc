@@ -236,8 +236,8 @@ simulated function CloakBoss()
         return;
     }
 
-    Skins[0] = Shader'KF_Specimens_Trip_N7.patriarch_invisible_gun';
-    Skins[1] = Shader'KF_Specimens_Trip_N7.patriarch_invisible';
+    Skins[0] = Shader'KF_Specimens_Trip_T.patriarch_invisible_gun';
+    Skins[1] = Shader'KF_Specimens_Trip_T.patriarch_invisible';
 
     if (PlayerShadow != None)
     {
@@ -1091,10 +1091,4 @@ defaultproperties
     ClawMeleeDamageRange=75
     ImpaleMeleeDamageRange=90.000000
     PseudoClass=class'N7_PseudoBoss'
-    DetachedArmClass=class'N7_SeveredArmPatriarch'
-    DetachedLegClass=class'N7_SeveredLegPatriarch'
-    DetachedHeadClass=class'N7_SeveredHeadPatriarch'
-    DetachedSpecialArmClass=class'N7_SeveredRocketArmPatriarch'
-    Skins(0)=Combiner'KF_Specimens_Trip_N7.gatling_cmb'
-    Skins(1)=Combiner'KF_Specimens_Trip_N7.patriarch_cmb'
 }

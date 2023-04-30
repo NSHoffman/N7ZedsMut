@@ -6,10 +6,11 @@ class N7ZedsMut extends Engine.Mutator
 #exec OBJ LOAD FILE=kf_gore_n7_sm.usx
 
 var const class<KFMonstersCollection> InitialMonstersCollection;
-var const class<KFMonstersCollection> N7MonstersCollection;
+var class<KFMonstersCollection> N7MonstersCollection;
 
 var() config bool
     bEnableAutoReplacement,
+    bUseOriginalZedSkins,
     bReplaceClot, 
     bReplaceCrawler,
     bReplaceGorefast,
@@ -32,8 +33,11 @@ simulated event PostBeginPlay() {
         return;
     }
 
-    if (bEnableAutoReplacement && KFGT.MonsterCollection == class'KFMod.KFGameType'.default.MonsterCollection) 
+    if (bEnableAutoReplacement && KFGT.MonsterCollection == class'KFMod.KFGameType'.default.MonsterCollection)
     {
+        if (bUseOriginalZedSkins)
+            N7MonstersCollection = class'N7_MonstersCollection';
+
         SetupMonsterCollection(KFGT);
     }
 }
@@ -46,6 +50,7 @@ static function FillPlayInfo(PlayInfo PlayInfo)
     super.FillPlayInfo(PlayInfo);
 
     PlayInfo.AddSetting(N7ZedsConfig, "bEnableAutoReplacement", "Enable ZEDs replacement", 0, 0, "Check");
+    PlayInfo.AddSetting(N7ZedsConfig, "bUseOriginalZedSkins", "Use original ZED skins", 0, 0, "Check");
 
     PlayInfo.AddSetting(N7ZedsConfig, "bReplaceClot", "Replace original Clots", 0, 0, "Check",,,, True);
     PlayInfo.AddSetting(N7ZedsConfig, "bReplaceCrawler", "Replace original Crawlers", 0, 0, "Check",,,, True);
@@ -64,6 +69,7 @@ static event string GetDescriptionText(string Property)
     switch (Property) 
     {
         case "bEnableAutoReplacement"   : return "Enable ZEDs replacement";
+        case "bUseOriginalZedSkins"     : return "Use original ZED skins";
         case "bReplaceClot"             : return "Replace original Clots";
         case "bReplaceCrawler"          : return "Replace original Crawlers";
         case "bReplaceGorefast"         : return "Replace original Gorefasts";
@@ -83,18 +89,18 @@ function bool ShouldReplaceZED(string ZedClass)
 {
     switch (ZedClass) 
     {
-        case "N7ZedsMut.N7_Clot"        : return bReplaceClot;
-        case "N7ZedsMut.N7_Crawler"     : return bReplaceCrawler;
-        case "N7ZedsMut.N7_Gorefast"    : return bReplaceGorefast;
-        case "N7ZedsMut.N7_Stalker"     : return bReplaceStalker;
-        case "N7ZedsMut.N7_Scrake"      : return bReplaceScrake;
-        case "N7ZedsMut.N7_Fleshpound"  : return bReplaceFleshpound;
-        case "N7ZedsMut.N7_Bloat"       : return bReplaceBloat;
-        case "N7ZedsMut.N7_Siren"       : return bReplaceSiren;
-        case "N7ZedsMut.N7_Husk"        : return bReplaceHusk;
-        case "N7ZedsMut.N7_Boss"        : return bReplaceBoss;
+        case N7MonstersCollection.default.MonsterClasses[0].MClassName  : return bReplaceClot;
+        case N7MonstersCollection.default.MonsterClasses[1].MClassName  : return bReplaceCrawler;
+        case N7MonstersCollection.default.MonsterClasses[2].MClassName  : return bReplaceGorefast;
+        case N7MonstersCollection.default.MonsterClasses[3].MClassName  : return bReplaceStalker;
+        case N7MonstersCollection.default.MonsterClasses[4].MClassName  : return bReplaceScrake;
+        case N7MonstersCollection.default.MonsterClasses[5].MClassName  : return bReplaceFleshpound;
+        case N7MonstersCollection.default.MonsterClasses[6].MClassName  : return bReplaceBloat;
+        case N7MonstersCollection.default.MonsterClasses[7].MClassName  : return bReplaceSiren;
+        case N7MonstersCollection.default.MonsterClasses[8].MClassName  : return bReplaceHusk;
+        case N7MonstersCollection.default.EndGameBossClass              : return bReplaceBoss;
 
-        default                         : return False;
+        default: return False;
     }
 }
 
@@ -221,9 +227,10 @@ defaultproperties
     GroupName="KFN7ZedsMut"
 
     InitialMonstersCollection=class'KFMod.KFMonstersCollection'
-    N7MonstersCollection=class'N7_MonstersCollection'
+    N7MonstersCollection=class'N7_MonstersCollection_VIOLENT'
     
     bEnableAutoReplacement=True
+    bUseOriginalZedSkins=False
 
     bReplaceClot=True
     bReplaceCrawler=True

@@ -430,7 +430,7 @@ simulated function StartBurnFX() {}
 simulated function StopBurnFX() {}
 simulated function ZombieCrispUp() {}
 
-defaultproperties
+defaultProperties
 {
     MenuName="N7 Pseudo Patriarch"
     ScoringValue=0

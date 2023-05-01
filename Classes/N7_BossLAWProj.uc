@@ -72,7 +72,7 @@ simulated function HitWall(vector HitNormal, actor Wall)
     super(Projectile).HitWall(HitNormal, Wall);
 }
 
-defaultproperties 
+defaultProperties 
 {
     ExplosionSound=SoundGroup'KF_LAWSnd.Rocket_Explode'
     StaticMesh=StaticMesh'KillingFloorStatics.LAWRocket'

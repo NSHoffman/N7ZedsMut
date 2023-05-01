@@ -1,4 +1,4 @@
-class N7_Boss_VIOLENT extends N7_Boss;
+class N7_Boss_SAVAGE extends N7_Boss;
 
 /** 
  * The whole purpose of overriding the method below

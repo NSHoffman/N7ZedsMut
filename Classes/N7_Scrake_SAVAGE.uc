@@ -1,4 +1,4 @@
-class N7_Scrake_VIOLENT extends N7_Scrake;
+class N7_Scrake_SAVAGE extends N7_Scrake;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {

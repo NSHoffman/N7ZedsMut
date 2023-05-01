@@ -1,4 +1,4 @@
-class N7_Bloat_VIOLENT extends N7_Bloat;
+class N7_Bloat_SAVAGE extends N7_Bloat;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {

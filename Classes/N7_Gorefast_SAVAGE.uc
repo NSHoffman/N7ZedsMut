@@ -1,4 +1,4 @@
-class N7_Gorefast_VIOLENT extends N7_Gorefast;
+class N7_Gorefast_SAVAGE extends N7_Gorefast;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {

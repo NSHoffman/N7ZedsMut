@@ -1,4 +1,4 @@
-class N7_Siren_VIOLENT extends N7_Siren;
+class N7_Siren_SAVAGE extends N7_Siren;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {

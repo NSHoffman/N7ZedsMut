@@ -1,4 +1,4 @@
-class N7_Stalker_VIOLENT extends N7_Stalker;
+class N7_Stalker_SAVAGE extends N7_Stalker;
 
 /** 
  * The whole purpose of overriding the methods below

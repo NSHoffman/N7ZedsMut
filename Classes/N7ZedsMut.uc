@@ -8,7 +8,7 @@ class N7ZedsMut extends Engine.Mutator
 var const class<KFMonstersCollection> InitialMonstersCollection;
 var class<KFMonstersCollection> N7MonstersCollection;
 
-var() config bool
+var config bool
     bEnableAutoReplacement,
     bUseOriginalZedSkins,
     bReplaceClot, 
@@ -227,7 +227,7 @@ defaultProperties
     GroupName="KFN7ZedsMut"
 
     InitialMonstersCollection=class'KFMod.KFMonstersCollection'
-    N7MonstersCollection=class'N7_MonstersCollection_VIOLENT'
+    N7MonstersCollection=class'N7_MonstersCollection_SAVAGE'
     
     bEnableAutoReplacement=True
     bUseOriginalZedSkins=False

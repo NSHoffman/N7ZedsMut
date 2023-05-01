@@ -1,4 +1,4 @@
-class N7_Crawler_VIOLENT extends N7_Crawler;
+class N7_Crawler_SAVAGE extends N7_Crawler;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {

@@ -1,4 +1,4 @@
-class N7_Husk_VIOLENT extends N7_Husk;
+class N7_Husk_SAVAGE extends N7_Husk;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {

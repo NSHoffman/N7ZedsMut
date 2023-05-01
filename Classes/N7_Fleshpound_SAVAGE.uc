@@ -1,4 +1,4 @@
-class N7_Fleshpound_VIOLENT extends N7_Fleshpound;
+class N7_Fleshpound_SAVAGE extends N7_Fleshpound;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {

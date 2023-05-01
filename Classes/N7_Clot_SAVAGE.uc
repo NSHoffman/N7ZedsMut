@@ -1,4 +1,4 @@
-class N7_Clot_VIOLENT extends N7_Clot;
+class N7_Clot_SAVAGE extends N7_Clot;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {

@@ -1,6 +1,6 @@
 class N7_SeveredHeadScrake extends SeveredHead;
 
-defaultproperties
+defaultProperties
 {
     StaticMesh=StaticMesh'kf_gore_n7_sm.heads.scrakehead'
 }

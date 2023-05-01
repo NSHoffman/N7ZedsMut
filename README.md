@@ -67,3 +67,9 @@ Note: _This mutator is still work in progress_
 - Gorefasts cannot be kited.
 - Patriarch cannot be kited after 1st heal.
 - Patriarch will not proceed with charging once his health level gets low.
+
+## Changelog
+
+### `1.2.1`
+
+- Added an option to switch between custom and default ZED skin packs by setting `bUseOriginalZedSkins` flag in a config file.

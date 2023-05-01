@@ -27,7 +27,7 @@ simulated function ChangeToYellow()
     bRed = False;
 }
 
-defaultproperties
+defaultProperties
 {
     LightHue=HUE_Yellow
     LightSaturation=0

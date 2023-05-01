@@ -1,0 +1,39 @@
+class N7_MonstersCollection_SAVAGE extends KFMod.KFMonstersCollection;
+
+defaultProperties
+{
+    MonsterClasses(0)=(MClassName="N7ZedsMut.N7_Clot_SAVAGE",Mid="A")
+    MonsterClasses(1)=(MClassName="N7ZedsMut.N7_Crawler_SAVAGE",Mid="B")
+    MonsterClasses(2)=(MClassName="N7ZedsMut.N7_Gorefast_SAVAGE",Mid="C")
+    MonsterClasses(3)=(MClassName="N7ZedsMut.N7_Stalker_SAVAGE",Mid="D")
+    MonsterClasses(4)=(MClassName="N7ZedsMut.N7_Scrake_SAVAGE",Mid="E")
+    MonsterClasses(5)=(MClassName="N7ZedsMut.N7_Fleshpound_SAVAGE",Mid="F")
+    MonsterClasses(6)=(MClassName="N7ZedsMut.N7_Bloat_SAVAGE",Mid="G")
+    MonsterClasses(7)=(MClassName="N7ZedsMut.N7_Siren_SAVAGE",Mid="H")
+    MonsterClasses(8)=(MClassName="N7ZedsMut.N7_Husk_SAVAGE",Mid="I")
+    StandardMonsterClasses(0)=(MClassName="N7ZedsMut.N7_Clot_SAVAGE",Mid="A")
+    StandardMonsterClasses(1)=(MClassName="N7ZedsMut.N7_Crawler_SAVAGE",Mid="B")
+    StandardMonsterClasses(2)=(MClassName="N7ZedsMut.N7_Gorefast_SAVAGE",Mid="C")
+    StandardMonsterClasses(3)=(MClassName="N7ZedsMut.N7_Stalker_SAVAGE",Mid="D")
+    StandardMonsterClasses(4)=(MClassName="N7ZedsMut.N7_Scrake_SAVAGE",Mid="E")
+    StandardMonsterClasses(5)=(MClassName="N7ZedsMut.N7_Fleshpound_SAVAGE",Mid="F")
+    StandardMonsterClasses(6)=(MClassName="N7ZedsMut.N7_Bloat_SAVAGE",Mid="G")
+    StandardMonsterClasses(7)=(MClassName="N7ZedsMut.N7_Siren_SAVAGE",Mid="H")
+    StandardMonsterClasses(8)=(MClassName="N7ZedsMut.N7_Husk_SAVAGE",Mid="I")
+    ShortSpecialSquads(2)=(ZedClass=("N7ZedsMut.N7_Crawler_SAVAGE","N7ZedsMut.N7_Gorefast_SAVAGE","N7ZedsMut.N7_Stalker_SAVAGE","N7ZedsMut.N7_Scrake_SAVAGE"),NumZeds=(2,2,1,1))
+    ShortSpecialSquads(3)=(ZedClass=("N7ZedsMut.N7_Bloat_SAVAGE","N7ZedsMut.N7_Siren_SAVAGE","N7ZedsMut.N7_Fleshpound_SAVAGE"),NumZeds=(1,2,1))
+    NormalSpecialSquads(3)=(ZedClass=("N7ZedsMut.N7_Crawler_SAVAGE","N7ZedsMut.N7_Gorefast_SAVAGE","N7ZedsMut.N7_Stalker_SAVAGE","N7ZedsMut.N7_Scrake_SAVAGE"),NumZeds=(2,2,1,1))
+    NormalSpecialSquads(4)=(ZedClass=("N7ZedsMut.N7_Fleshpound_SAVAGE"),NumZeds=(1))
+    NormalSpecialSquads(5)=(ZedClass=("N7ZedsMut.N7_Bloat_SAVAGE","N7ZedsMut.N7_Siren_SAVAGE","N7ZedsMut.N7_Fleshpound_SAVAGE"),NumZeds=(1,1,1))
+    NormalSpecialSquads(6)=(ZedClass=("N7ZedsMut.N7_Bloat_SAVAGE","N7ZedsMut.N7_Siren_SAVAGE","N7ZedsMut.N7_Fleshpound_SAVAGE"),NumZeds=(1,1,2))
+    LongSpecialSquads(4)=(ZedClass=("N7ZedsMut.N7_Crawler_SAVAGE","N7ZedsMut.N7_Gorefast_SAVAGE","N7ZedsMut.N7_Stalker_SAVAGE","N7ZedsMut.N7_Scrake_SAVAGE"),NumZeds=(2,2,1,1))
+    LongSpecialSquads(6)=(ZedClass=("N7ZedsMut.N7_Fleshpound_SAVAGE"),NumZeds=(1))
+    LongSpecialSquads(7)=(ZedClass=("N7ZedsMut.N7_Bloat_SAVAGE","N7ZedsMut.N7_Siren_SAVAGE","N7ZedsMut.N7_Fleshpound_SAVAGE"),NumZeds=(1,1,1))
+    LongSpecialSquads(8)=(ZedClass=("N7ZedsMut.N7_Bloat_SAVAGE","N7ZedsMut.N7_Siren_SAVAGE","N7ZedsMut.N7_Scrake_SAVAGE","N7ZedsMut.N7_Fleshpound_SAVAGE"),NumZeds=(1,2,1,1))
+    LongSpecialSquads(9)=(ZedClass=("N7ZedsMut.N7_Bloat_SAVAGE","N7ZedsMut.N7_Siren_SAVAGE","N7ZedsMut.N7_Scrake_SAVAGE","N7ZedsMut.N7_Fleshpound_SAVAGE"),NumZeds=(1,2,1,2))
+    FinalSquads(0)=(ZedClass=("N7ZedsMut.N7_Clot_SAVAGE"),NumZeds=(4))
+    FinalSquads(1)=(ZedClass=("N7ZedsMut.N7_Clot_SAVAGE","N7ZedsMut.N7_Crawler_SAVAGE"),NumZeds=(3,1))
+    FinalSquads(2)=(ZedClass=("N7ZedsMut.N7_Clot_SAVAGE","N7ZedsMut.N7_Stalker_SAVAGE","N7ZedsMut.N7_Crawler_SAVAGE"),NumZeds=(3,1,1))
+    FallbackMonsterClass="N7ZedsMut.N7_Stalker_SAVAGE"
+    EndGameBossClass="N7ZedsMut.N7_Boss_SAVAGE"
+}

@@ -1,4 +1,5 @@
-class N7_Stalker extends KFChar.ZombieStalker_STANDARD;
+class N7_Stalker extends KFChar.ZombieStalker_STANDARD
+    config(N7ZedsMut);
 
 /**
  * Each stalker has a chance to spawn
@@ -69,7 +70,7 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
     return super(KFMonster).DoAnimAction(AnimName);
 }
 
-simulated function Tick(float DeltaTime) 
+simulated function Tick(float DeltaTime)
 {
     local bool bKeepAccelerationWhileAttacking;
     bKeepAccelerationWhileAttacking = LookTarget != None && bShotAnim && !bWaitForAnim;
@@ -105,7 +106,7 @@ simulated function Tick(float DeltaTime)
                 bSpotted = False;
             }
 
-            if (!bSpotted && !bCloaked && Skins[0] != Combiner'KF_Specimens_Trip_N7.stalker_cmb')
+            if (!bSpotted && !bCloaked && Skins[0] != default.Skins[3])
             {
                 UncloakStalker();
             }
@@ -116,7 +117,7 @@ simulated function Tick(float DeltaTime)
                     bUnlit = False;
                     CloakStalker();
                 }
-                else if (Skins[0] != Shader'KF_Specimens_Trip_N7.stalker_invisible')
+                else if (Skins[0] != default.Skins[0])
                 {
                     CloakStalker();
                 }
@@ -148,6 +149,11 @@ function SpawnPseudoSquad()
     local int PseudoSquadSize, i;
     local N7_Stalker CurrentPseudoStalker;
 
+    if (MaxPseudoSquadSize <= 0 || MaxPseudoSquadSize < MinPseudoSquadSize)
+    {
+        return;
+    }
+
     PseudoSquadSize = MinPseudoSquadSize + Rand(MaxPseudoSquadSize - MinPseudoSquadSize + 1);
 
     for (i = 0; i < PseudoSquadSize; i++)
@@ -165,6 +171,11 @@ function KillPseudoSquad()
 {
     local int i;
 
+    if (PseudoSquad.Length == 0)
+    {
+        return;
+    }
+
     for (i = 0; i < PseudoSquad.Length; i++)
     {
         if (PseudoSquad[i] != None)
@@ -177,6 +188,145 @@ function KillPseudoSquad()
     PseudoSquad.Length = 0;
 }
 
+/** 
+ * The whole purpose of overriding the methods below
+ * is to replace hardcoded materials with property values
+ */
+
+function RemoveHead()
+{
+    super.RemoveHead();
+
+    if (!bCrispified)
+    {
+        Skins[1] = default.Skins[2];
+        Skins[0] = default.Skins[3];
+    }
+}
+
+simulated function CloakStalker()
+{
+    if (bZapped)
+    {
+        return;
+    }
+
+    if (bSpotted)
+    {
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
+
+        Skins[0] = Finalblend'KFX.StalkerGlow';
+        Skins[1] = Finalblend'KFX.StalkerGlow';
+        bUnlit = True;
+        return;
+    }
+
+    if (!bDecapitated && !bCrispified)
+    {
+        Visibility = 1;
+        bCloaked = True;
+
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
+
+        Skins[0] = default.Skins[0];
+        Skins[1] = default.Skins[1];
+
+        if (PlayerShadow != None)
+            PlayerShadow.bShadowActive = False;
+        if (RealTimeShadow != None)
+            RealTimeShadow.Destroy();
+
+        Projectors.Remove(0, Projectors.Length);
+        bAcceptsProjectors = False;
+        SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, True);
+    }
+}
+
+simulated function UnCloakStalker()
+{
+    if (bZapped)
+    {
+        return;
+    }
+
+    if (!bCrispified)
+    {
+        LastUncloakTime = Level.TimeSeconds;
+
+        Visibility = default.Visibility;
+        bCloaked = False;
+        bUnlit = False;
+
+        // 25% chance of our Enemy saying something about us being invisible
+        if (
+            Level.NetMode != NM_Client 
+            && !KFGameType(Level.Game).bDidStalkerInvisibleMessage 
+            && FRand() < 0.25 
+            && Controller.Enemy != None 
+            && PlayerController(Controller.Enemy.Controller) != None
+        )
+        {
+            PlayerController(Controller.Enemy.Controller).Speech('AUTO', 17, "");
+            KFGameType(Level.Game).bDidStalkerInvisibleMessage = True;
+        }
+
+        if (Level.NetMode == NM_DedicatedServer)
+            return;
+
+        if (Skins[0] != default.Skins[3])
+        {
+            Skins[1] = default.Skins[2];
+            Skins[0] = default.Skins[3];
+
+            if (PlayerShadow != None)
+                PlayerShadow.bShadowActive = True;
+
+            bAcceptsProjectors = True;
+            SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, True);
+        }
+    }
+}
+
+simulated function SetZappedBehavior()
+{
+    super.SetZappedBehavior();
+
+    bUnlit = False;
+
+    // Handle setting the zed to uncloaked so the zapped overlay works properly
+    if (Level.Netmode != NM_DedicatedServer)
+    {
+        Skins[1] = default.Skins[2];
+        Skins[0] = default.Skins[3];
+
+        if (PlayerShadow != None)
+            PlayerShadow.bShadowActive = True;
+
+        bAcceptsProjectors = True;
+        SetOverlayMaterial(Material'KFZED_FX_T.Energy.ZED_overlay_Hit_Shdr', 999, True);
+    }
+}
+
+simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
+{
+    super(KFMonster).PlayDying(DamageType, HitLoc);
+
+    KillPseudoSquad();
+
+    if (bUnlit)
+        bUnlit = !bUnlit;
+
+    LocalKFHumanPawn = None;
+
+    if (!bCrispified)
+    {
+        Skins[1] = default.Skins[2];
+        Skins[0] = default.Skins[3];
+    }
+}
+
 defaultProperties
 {
     MenuName="N7 Stalker"
@@ -185,4 +335,6 @@ defaultProperties
     MinPseudoSquadSize=0
     MaxPseudoSquadSize=3
     PseudoClass=class'N7_PseudoStalker'
+    Skins(2)=FinalBlend'KF_Specimens_Trip_T.stalker_fb'
+    Skins(3)=Combiner'KF_Specimens_Trip_T.stalker_cmb'
 }

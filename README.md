@@ -3,8 +3,6 @@
 > Inspired by **SuperZombieMut** and **HardPat** mutators whose purpose was to enhance ZEDs behaviour making the game more challenging
 > this mutator goes further and adds a bunch of features to original ZEDS and fixes some well-known issues/exploits.
 
-Note: _This mutator is still work in progress_
-
 ## Features
 
 ### General
@@ -70,6 +68,4 @@ Note: _This mutator is still work in progress_
 
 ## Changelog
 
-### `1.2.1`
-
-- Added an option to switch between custom and default ZED skin packs by setting `bUseOriginalZedSkins` flag in a config file.
+All the changes and updates starting from version `1.2.0` can be found in the separate [`CHANGELOG.md`](./CHANGELOG.md) file.

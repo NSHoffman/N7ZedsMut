@@ -193,6 +193,11 @@ simulated function AnimEnd(int Channel)
     }
 }
 
+/**
+ * The whole purpose of overriding the method below
+ * is to provide different material sources
+ */
+
 simulated function CloakBoss()
 {
     local Controller C;
@@ -236,8 +241,8 @@ simulated function CloakBoss()
         return;
     }
 
-    Skins[0] = Shader'KF_Specimens_Trip_T.patriarch_invisible_gun';
-    Skins[1] = Shader'KF_Specimens_Trip_T.patriarch_invisible';
+    Skins[0] = default.Skins[2];
+    Skins[1] = default.Skins[3];
 
     if (PlayerShadow != None)
     {
@@ -611,6 +616,11 @@ function SpawnPseudoSquad()
     MinPseudoSquadSize = CombatStages[SyringeCount].MinPseudos;
     MaxPseudoSquadSize = CombatStages[SyringeCount].MaxPseudos;
 
+    if (MaxPseudoSquadSize <= 0 || MaxPseudoSquadSize < MinPseudoSquadSize)
+    {
+        return;
+    }
+
     PseudoSquadSize = MinPseudoSquadSize + Rand(MaxPseudoSquadSize - MinPseudoSquadSize + 1);
 
     for (i = 0; i < PseudoSquadSize; i++)
@@ -627,6 +637,11 @@ function SpawnPseudoSquad()
 function KillPseudoSquad()
 {
     local int i;
+
+    if (PseudoSquad.Length == 0)
+    {
+        return;
+    }
 
     for (i = 0; i < PseudoSquad.Length; i++)
     {
@@ -1091,4 +1106,7 @@ defaultProperties
     ClawMeleeDamageRange=75
     ImpaleMeleeDamageRange=90.000000
     PseudoClass=class'N7_PseudoBoss'
+
+    Skins(2)=Shader'KF_Specimens_Trip_T.patriarch_invisible_gun'
+    Skins(3)=Shader'KF_Specimens_Trip_T.patriarch_invisible'
 }

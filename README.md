@@ -68,4 +68,4 @@
 
 ## Changelog
 
-All the changes and updates starting from version `1.2.1` can be found in the separate [`CHANGELOG.md`](./CHANGELOG.md) file.
+All the changes and updates starting from version `1.2.0` can be found in the separate [`CHANGELOG.md`](./CHANGELOG.md) file.

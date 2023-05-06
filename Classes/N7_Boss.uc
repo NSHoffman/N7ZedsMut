@@ -3,7 +3,7 @@ class N7_Boss extends KFChar.ZombieBoss_STANDARD
 
 struct CombatStage
 {
-    var bool
+    var config bool
         // Whether players are allowed to exploit kiting
         bCanKite,
 
@@ -16,7 +16,7 @@ struct CombatStage
         // Whether patriarch can teleport closer to players
         bUseTeleport;
 
-    var int
+    var config int
         // Fixed number of chaingun shots
         CGShots,
 
@@ -27,7 +27,7 @@ struct CombatStage
         MinPseudos,
         MaxPseudos;
 
-    var float
+    var config float
         // Chance of kiting when bCanKite is False
         KiteChance,
 
@@ -67,7 +67,7 @@ var float LastDamagedTime;
  * that get killed if the host is dead
  */
 var class<N7_Boss> PseudoClass;
-var Array<N7_Boss> PseudoSquad;
+var array<N7_Boss> PseudoSquad;
 
 var bool bMovingChaingunAttack;
 

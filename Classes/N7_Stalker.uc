@@ -7,17 +7,22 @@ class N7_Stalker extends KFChar.ZombieStalker_STANDARD
  * that get killed if the host is dead
  */
 var class<N7_Stalker> PseudoClass;
-var Array<N7_Stalker> PseudoSquad;
+var array<N7_Stalker> PseudoSquad;
 
 var int MinPseudoSquadSize;
 var int MaxPseudoSquadSize;
+
+var config bool bSpawnPseudos;
 
 /** Spawning pseudo stalkers squad */
 simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    SpawnPseudoSquad();
+    if (bSpawnPseudos)
+    {
+        SpawnPseudoSquad();
+    }
 }
 
 /* Don't interrupt stalker when she's trying to attack */
@@ -281,7 +286,9 @@ simulated function UnCloakStalker()
             Skins[0] = default.Skins[3];
 
             if (PlayerShadow != None)
+            {
                 PlayerShadow.bShadowActive = True;
+            }
 
             bAcceptsProjectors = True;
             SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, True);
@@ -302,7 +309,9 @@ simulated function SetZappedBehavior()
         Skins[0] = default.Skins[3];
 
         if (PlayerShadow != None)
+        {
             PlayerShadow.bShadowActive = True;
+        }
 
         bAcceptsProjectors = True;
         SetOverlayMaterial(Material'KFZED_FX_T.Energy.ZED_overlay_Hit_Shdr', 999, True);
@@ -313,10 +322,15 @@ simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
 {
     super(KFMonster).PlayDying(DamageType, HitLoc);
 
-    KillPseudoSquad();
+    if (bSpawnPseudos)
+    {
+        KillPseudoSquad();
+    }
 
     if (bUnlit)
+    {
         bUnlit = !bUnlit;
+    }
 
     LocalKFHumanPawn = None;
 
@@ -332,6 +346,7 @@ defaultProperties
     MenuName="N7 Stalker"
     GroundSpeed=210.000000
     WaterSpeed=190.000000
+    bSpawnPseudos=True
     MinPseudoSquadSize=0
     MaxPseudoSquadSize=3
     PseudoClass=class'N7_PseudoStalker'

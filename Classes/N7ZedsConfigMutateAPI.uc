@@ -16,7 +16,7 @@ struct CommandInfo
     var const array<ConfigSetting> Settings;
     var const string Alias, Description, Signature, SettingsText;
     var const bool bAffectsZedConfig;
-    var bool bAdminOnly;
+    var config bool bAdminOnly;
 };
 
 /*************************
@@ -31,8 +31,7 @@ const INFO_Cfg = 1;
 const TEMPLATE_KEY = "%KEY%";
 const TEMPLATE_VALUE = "%VALUE%";
 
-var protected const array<CommandInfo> Commands;
-var protected const config byte AdminOnly[COMMANDS_COUNT];
+var protected const config CommandInfo Commands[COMMANDS_COUNT];
 var protected const config string Prefix;
 
 /*************************
@@ -89,7 +88,7 @@ public function bool Run(optional out byte bShouldUpdateZeds)
         if (!bStatus) return bStatus;
 
         bShouldUpdateZeds = 1;
-        Say(GetSuccessMessage(Command.SettingsText, value));
+        Msg(GetSuccessMessage(Command.SettingsText, value));
     }
     else
     {
@@ -108,7 +107,6 @@ protected function FindCommand()
         if (Alias ~= GetFullAlias(Commands[i].Alias))
         {
             Command = Commands[i];
-            Command.bAdminOnly = bool(AdminOnly[i]);
             return;
         }
     }
@@ -123,7 +121,7 @@ protected function CheckPermissions()
         !Sender.PlayerReplicationInfo.bSilentAdmin)
     {
         bStatus = False;
-        Say(MsgAccessDenied);
+        Msg(MsgAccessDenied);
     }
 }
 
@@ -173,7 +171,7 @@ protected function Help()
     for (i = 0; i < COMMANDS_COUNT; i++)
     {
         cmd = Commands[i];
-        Say(Prefix$cmd.Alias$" "$cmd.Signature$"     - "$cmd.Description);
+        Msg(Prefix$cmd.Alias$" "$cmd.Signature$"  ::  "$cmd.Description);
     }
 }
 
@@ -207,9 +205,9 @@ protected function ShowConfig()
         }
     }
 
-    Say("Enabled Zeds: "$EnabledZeds);
-    Say("Disabled Zeds: "$DisabledZeds);
-    Say("Use Original Skins: "$Skins);
+    Msg("Enabled Zeds: "$EnabledZeds);
+    Msg("Disabled Zeds: "$DisabledZeds);
+    Msg("Use Original Skins: "$Skins);
 }
 
 /*************************
@@ -232,7 +230,7 @@ protected function string GetSuccessMessage(string SettingKey, string Value)
     return transformedMessage;
 }
 
-protected function Say(string Message)
+protected function Msg(string Message)
 {
     Sender.TeamMessage(None, Message, 'Event');
 }
@@ -242,20 +240,20 @@ defaultProperties
     bStatus=True
 
     Prefix="zeds."
-    Commands(0)=(Alias="help",Description="Show Available Commands",Signature="()",bAffectsZedConfig=False,bAdminOnly=False,SettingsText="",Settings=())
-    Commands(1)=(Alias="cfg",Description="Show Current Config",Signature="()",bAffectsZedConfig=False,bAdminOnly=False,SettingsText="",Settings=((Id="Original Zeds",Key="bUseOriginalZedSkins"),(Id="Clot",Key="bReplaceClot"),(Id="Crawler",Key="bReplaceCrawler"),(Id="Gorefast",Key="bReplaceGorefast"),(Id="Stalker",Key="bReplaceStalker"),(Id="Scrake",Key="bReplaceScrake"),(Id="Fleshpound",Key="bReplaceFleshpound"),(Id="Bloat",Key="bReplaceBloat"),(Id="Siren",Key="bReplaceSiren"),(Id="Husk",Key="bReplaceHusk"),(Id="Boss",Key="bReplaceBoss")))
-    Commands(2)=(Alias="skins",Description="Use Original ZED Skins",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bUseOriginalZedSkins",Settings=((Id="Original Zeds",Key="bUseOriginalZedSkins")))
-    Commands(3)=(Alias="clot",Description="Replace Clots",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceClot",Settings=((Id="Clot",Key="bReplaceClot")))
-    Commands(4)=(Alias="crawl",Description="Replace Crawlers",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceCrawler",Settings=((Id="Crawler",Key="bReplaceCrawler")))
-    Commands(5)=(Alias="gore",Description="Replace Gorefasts",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceGorefast",Settings=((Id="Gorefast",Key="bReplaceGorefast")))
-    Commands(6)=(Alias="stalk",Description="Replace Stalkers",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceStalker",Settings=((Id="Stalker",Key="bReplaceStalker")))
-    Commands(7)=(Alias="sc",Description="Replace Scrakes",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceScrake",Settings=((Id="Scrake",Key="bReplaceScrake")))
-    Commands(8)=(Alias="fp",Description="Replace Fleshpounds",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceFleshpound",Settings=((Id="Fleshpound",Key="bReplaceFleshpound")))
-    Commands(9)=(Alias="bloat",Description="Replace Bloats",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceBloat",Settings=((Id="Bloat",Key="bReplaceBloat")))
-    Commands(10)=(Alias="siren",Description="Replace Sirens",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceSiren",Settings=((Id="Siren",Key="bReplaceSiren")))
-    Commands(11)=(Alias="husk",Description="Replace Husks",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceHusk",Settings=((Id="Husk",Key="bReplaceHusk")))
-    Commands(12)=(Alias="boss",Description="Replace Boss",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceBoss",Settings=((Id="Boss",Key="bReplaceBoss")))
-    Commands(13)=(Alias="all",Description="Replace All",Signature="(Bool)",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="All zeds replacement",Settings=((Id="Clot",Key="bReplaceClot"),(Id="Crawler",Key="bReplaceCrawler"),(Id="Gorefast",Key="bReplaceGorefast"),(Id="Stalker",Key="bReplaceStalker"),(Id="Scrake",Key="bReplaceScrake"),(Id="Fleshpound",Key="bReplaceFleshpound"),(Id="Bloat",Key="bReplaceBloat"),(Id="Siren",Key="bReplaceSiren"),(Id="Husk",Key="bReplaceHusk"),(Id="Boss",Key="bReplaceBoss")))
+    Commands(0)=(Alias="help",Description="Show Available Commands",Signature="< >",bAffectsZedConfig=False,bAdminOnly=False,SettingsText="",Settings=())
+    Commands(1)=(Alias="cfg",Description="Show Current Config",Signature="< >",bAffectsZedConfig=False,bAdminOnly=False,SettingsText="",Settings=((Id="Original Skins",Key="bUseOriginalZedSkins"),(Id="Clot",Key="bReplaceClot"),(Id="Crawler",Key="bReplaceCrawler"),(Id="Gorefast",Key="bReplaceGorefast"),(Id="Stalker",Key="bReplaceStalker"),(Id="Scrake",Key="bReplaceScrake"),(Id="Fleshpound",Key="bReplaceFleshpound"),(Id="Bloat",Key="bReplaceBloat"),(Id="Siren",Key="bReplaceSiren"),(Id="Husk",Key="bReplaceHusk"),(Id="Boss",Key="bReplaceBoss")))
+    Commands(2)=(Alias="skins",Description="Use Original ZEDs Skins",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bUseOriginalZedSkins",Settings=((Id="Original Skins",Key="bUseOriginalZedSkins")))
+    Commands(3)=(Alias="clot",Description="Replace Clots",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceClot",Settings=((Id="Clot",Key="bReplaceClot")))
+    Commands(4)=(Alias="crawl",Description="Replace Crawlers",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceCrawler",Settings=((Id="Crawler",Key="bReplaceCrawler")))
+    Commands(5)=(Alias="gore",Description="Replace Gorefasts",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceGorefast",Settings=((Id="Gorefast",Key="bReplaceGorefast")))
+    Commands(6)=(Alias="stalk",Description="Replace Stalkers",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceStalker",Settings=((Id="Stalker",Key="bReplaceStalker")))
+    Commands(7)=(Alias="sc",Description="Replace Scrakes",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceScrake",Settings=((Id="Scrake",Key="bReplaceScrake")))
+    Commands(8)=(Alias="fp",Description="Replace Fleshpounds",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceFleshpound",Settings=((Id="Fleshpound",Key="bReplaceFleshpound")))
+    Commands(9)=(Alias="bloat",Description="Replace Bloats",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceBloat",Settings=((Id="Bloat",Key="bReplaceBloat")))
+    Commands(10)=(Alias="siren",Description="Replace Sirens",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceSiren",Settings=((Id="Siren",Key="bReplaceSiren")))
+    Commands(11)=(Alias="husk",Description="Replace Husks",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceHusk",Settings=((Id="Husk",Key="bReplaceHusk")))
+    Commands(12)=(Alias="boss",Description="Replace Boss",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="bReplaceBoss",Settings=((Id="Boss",Key="bReplaceBoss")))
+    Commands(13)=(Alias="all",Description="Replace All",Signature="< flag >",bAffectsZedConfig=True,bAdminOnly=False,SettingsText="All zeds replacement",Settings=((Id="Clot",Key="bReplaceClot"),(Id="Crawler",Key="bReplaceCrawler"),(Id="Gorefast",Key="bReplaceGorefast"),(Id="Stalker",Key="bReplaceStalker"),(Id="Scrake",Key="bReplaceScrake"),(Id="Fleshpound",Key="bReplaceFleshpound"),(Id="Bloat",Key="bReplaceBloat"),(Id="Siren",Key="bReplaceSiren"),(Id="Husk",Key="bReplaceHusk"),(Id="Boss",Key="bReplaceBoss")))
 
     MsgSuccessTemplate="%KEY% set to %VALUE%"
     MsgAccessDenied="Access Denied"

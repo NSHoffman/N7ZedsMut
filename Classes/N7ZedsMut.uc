@@ -148,9 +148,9 @@ function AdjustNormalMonsterSquads()
             InitialZedClass = InitialMonstersCollectionClass.default.NormalSpecialSquads[i].ZedClass[j];
 
             if (ShouldReplaceZED(N7ZedClass))
-                N7MonstersCollectionClass.default.NormalSpecialSquads[i].ZedClass[j] = N7ZedClass;
+                FinalMonstersCollectionClass.default.NormalSpecialSquads[i].ZedClass[j] = N7ZedClass;
             else
-                N7MonstersCollectionClass.default.NormalSpecialSquads[i].ZedClass[j] = InitialZedClass;
+                FinalMonstersCollectionClass.default.NormalSpecialSquads[i].ZedClass[j] = InitialZedClass;
         }
     }
 }
@@ -247,7 +247,7 @@ static function FillPlayInfo(PlayInfo PlayInfo)
 
     super.FillPlayInfo(PlayInfo);
 
-    PlayInfo.AddSetting(GeneralSettings, B_USE_ORIGINAL_ZED_SKINS_KEY, "Use Original Skins", 0, 0, "Check");
+    PlayInfo.AddSetting(GeneralSettings, B_USE_ORIGINAL_ZED_SKINS_KEY, "Use Original ZEDs Skins", 0, 0, "Check");
 
     PlayInfo.AddSetting(ZedsSettings, B_REPLACE_CLOT_KEY, "Replace Clots", 0, 0, "Check",,,, True);
     PlayInfo.AddSetting(ZedsSettings, B_REPLACE_CRAWLER_KEY, "Replace Crawlers", 0, 0, "Check",,,, True);
@@ -265,7 +265,7 @@ static event string GetDescriptionText(string Property)
 {
     switch (Property) 
     {
-        case B_USE_ORIGINAL_ZED_SKINS_KEY   : return "Use original zeds skins";
+        case B_USE_ORIGINAL_ZED_SKINS_KEY   : return "Use original ZEDs skins";
         case B_REPLACE_CLOT_KEY             : return "Replace original Clots";
         case B_REPLACE_CRAWLER_KEY          : return "Replace original Crawlers";
         case B_REPLACE_GOREFAST_KEY         : return "Replace original Gorefasts";
@@ -314,7 +314,7 @@ function Mutate(string MutateString, PlayerController Sender)
 defaultProperties 
 {
     FriendlyName="N7 Zeds"
-    Description="Adds a bunch of features to original ZEDS and fixes some well-known issues/exploits"
+    Description="Mutator modifies vanilla ZEDs providing them with new appearance and behaviour features + fixes a bunch of well-known issues and exploits which could negatively affect the original gameplay."
     GroupName="KFN7ZedsMut"
 
     InitialMonstersCollectionClass=class'KFMod.KFMonstersCollection'

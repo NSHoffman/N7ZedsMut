@@ -16,7 +16,7 @@ struct CommandInfo
     var const array<ConfigSetting> Settings;
     var const string Alias, Description, Signature, SettingsText;
     var const bool bAffectsZedConfig;
-    var config bool bAdminOnly;
+    var bool bAdminOnly;
 };
 
 /*************************
@@ -31,7 +31,8 @@ const INFO_Cfg = 1;
 const TEMPLATE_KEY = "%KEY%";
 const TEMPLATE_VALUE = "%VALUE%";
 
-var protected const config CommandInfo Commands[COMMANDS_COUNT];
+var protected const CommandInfo Commands[COMMANDS_COUNT];
+var protected const config byte flagAdminOnlyCommand[COMMANDS_COUNT];
 var protected const config string Prefix;
 
 /*************************
@@ -107,6 +108,7 @@ protected function FindCommand()
         if (Alias ~= GetFullAlias(Commands[i].Alias))
         {
             Command = Commands[i];
+            Command.bAdminOnly = bool(flagAdminOnlyCommand[i]);
             return;
         }
     }

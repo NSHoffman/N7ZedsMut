@@ -47,11 +47,14 @@ var const class<KFMonstersCollection> InitialMonstersCollectionClass;
 var class<KFMonstersCollection> N7MonstersCollectionClass;
 var class<KFMonstersCollection> FinalMonstersCollectionClass;
 
+var class<N7ZedsConfigMutateAPI> MutateApiClass;
+
 /*************************
  INITIALIZATION
  *************************/
 
-simulated event PostBeginPlay() {
+simulated event PostBeginPlay() 
+{
     local KFGameType KFGT;
 
     KFGT = KFGameType(Level.Game);
@@ -66,6 +69,32 @@ simulated event PostBeginPlay() {
     {
         SetupMonsterCollection(KFGT);
     }
+
+    SaveConfiguration();
+}
+
+function SaveConfiguration()
+{
+    self.SaveConfig();
+
+    class'N7_Stalker'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Stalker');    
+
+    class'N7_Boss'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Boss');
+
+    MutateApiClass.static.StaticSaveConfig();   
+}
+
+function ClearDefaultConfiguration(class<KFMonster> MC)
+{
+    MC.static.StaticClearConfig("bPlayOwnFootsteps");
+    MC.static.StaticClearConfig("SelectedEquipment");
+    MC.static.StaticClearConfig("bPlayerShadows");
+    MC.static.StaticClearConfig("bBlobShadow");
+    MC.static.StaticClearConfig("PlacedCharacterName");
+    MC.static.StaticClearConfig("PlacedFemaleCharacterName");
+    MC.static.StaticClearConfig("bNoCoronas");
 }
 
 /*************************
@@ -297,7 +326,7 @@ function Mutate(string MutateString, PlayerController Sender)
     
     if (KFGT != None)
     {
-        mutateCommand = new(self) class'N7ZedsConfigMutateAPI';
+        mutateCommand = new(self) MutateApiClass;
 
         mutateCommand.Init(Sender, mutateArgs);
         mutateCommand.Run(bShouldUpdateZeds);
@@ -320,6 +349,8 @@ defaultProperties
     InitialMonstersCollectionClass=class'KFMod.KFMonstersCollection'
     N7MonstersCollectionClass=class'N7_MonstersCollection_SAVAGE'
     FinalMonstersCollectionClass=class'N7_MonstersCollection_FINAL'
+
+    MutateApiClass=class'N7ZedsConfigMutateAPI'
     
     bEnableAutoReplacement=True
     bUseOriginalZedSkins=False

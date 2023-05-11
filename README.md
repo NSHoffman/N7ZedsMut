@@ -1,16 +1,35 @@
 # N7Zeds mutator for Killing Floor
 
-> Inspired by **SuperZombieMut** and **HardPat** mutators whose purpose was to enhance ZEDs behaviour making the game more challenging
-> this mutator goes further and adds a bunch of features to original ZEDS and fixes some well-known issues/exploits.
+Inspired by **SuperZombieMut** and **HardPat** mutators whose purpose was to enhance ZEDs behaviour making the game more challenging
+this mutator goes further and adds a bunch of features to original ZEDS and fixes some well-known issues/exploits.
+
+## Table of Contents
+
+- [1. Features](#features)
+  - [1.1. General](#general)
+  - [1.2. Gorefast](#gorefast)
+  - [1.3. Crawler](#crawler)
+  - [1.4. Stalker](#stalker)
+  - [1.5. Husk](#husk)
+  - [1.6. Siren](#siren)
+  - [1.7. Scrake](#scrake)
+  - [1.8. Fleshpound](#fleshpound)
+  - [1.9. Patriarch](#patriarch)
+- [2. Fixes](#fixes)
+- [3. Changelog](#changelog)
+- [4. Contacts](#contacts)
 
 ## Features
 
 ### General
 
-- Automatic ZEDs replacement can be switched off.
-- User can switch off individual ZEDs replacement.
-- All ZEDs skins retextured (based on Grittier Zeds replacement pack).
 - Speed of some ZEDs increased.
+- Each ZED's replacement rules can be configured individually.
+- All ZEDs skins retextured (based on Grittier Zeds replacement pack).
+- [`1.2.0`] Alternative skins can be switched off in favour of vanilla textures.
+- [`1.3.0`] Mutate API extended to allow in-game ZEDs configuration. ([`MUTATE.md`](./MUTATE.md))
+
+> More information on configuration in [`CONFIG.md`](./CONFIG.md)
 
 ### Gorefast
 
@@ -69,3 +88,11 @@
 ## Changelog
 
 All the changes and updates starting from version `1.2.0` can be found in the separate [`CHANGELOG.md`](./CHANGELOG.md) file.
+
+## Contacts
+
+For questions/concerns/recommendations you can contact me via steam or email:
+
+**Steam Profile:** [N7n](https://steamcommunity.com/id/NSHoffman/)
+
+**Email:** [hoffmanmyst@gmail.com](mailto:hoffmanmyst@gmail.com)

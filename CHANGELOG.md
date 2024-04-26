@@ -67,14 +67,7 @@
   + **Fleshpound**
     * Added chance setting of settling down after killing a player.
     * Added setting of distance at which fleshpound stops charging at player (works only if fleshpound has been raged by damage).
-- **Major changes to alternative skin pack**:
-  + Clot
-  + Bloat
-  + Gorefast
-  + Crawler
-  + Siren
-  + Scrake
-  + Fleshpound
+- **Major changes to custom skins pack**: Clot, Bloat, Gorefast, Crawler, Siren, Scrake, Fleshpound.
 
 ### `1.4.x` Fixes
 

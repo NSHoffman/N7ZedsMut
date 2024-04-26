@@ -54,7 +54,7 @@ ignores StartCharging;
             else
                 DifficultyModifier = 3.0;
 
-    		RageEndTime = (Level.TimeSeconds + 5 * DifficultyModifier) + (FRand() * 6 * DifficultyModifier);
+            RageEndTime = (Level.TimeSeconds + 5 * DifficultyModifier) + (FRand() * 6 * DifficultyModifier);
             NetUpdateTime = Level.TimeSeconds - 1;
         }
         else
@@ -64,45 +64,45 @@ ignores StartCharging;
     }
 
     function Tick(float Delta)
-	{
-		if (!bShotAnim)
-		{
-			SetGroundSpeed(OriginalGroundSpeed * 2.3);
+    {
+        if (!bShotAnim)
+        {
+            SetGroundSpeed(OriginalGroundSpeed * 2.3);
 
             if (!bFrustrated && !bZedUnderControl && LookTarget != None &&
                 Level.TimeSeconds > RageEndTime && VSize(LookTarget.Location - Location) > RageStopDistance)
-			{
-            	GoToState('');
-			}
-		}
+            {
+                GoToState('');
+            }
+        }
 
-    	if (Role == ROLE_Authority && bShotAnim)
-    	{
-    		if (LookTarget != None)
-    		{
-    		    Acceleration = AccelRate * Normal(LookTarget.Location - Location);
-    		}
+        if (Role == ROLE_Authority && bShotAnim)
+        {
+            if (LookTarget != None)
+            {
+                Acceleration = AccelRate * Normal(LookTarget.Location - Location);
+            }
         }
 
         global.Tick(Delta);
-	}
+    }
 
     function bool MeleeDamageTarget(int HitDamage, Vector PushDir)
     {
         local bool bHit, bEnemyPawn;
         local Pawn PawnTarget;
 
-		bEnemyPawn = Controller.Target == Controller.Enemy;
+        bEnemyPawn = Controller.Target == Controller.Enemy;
 
         if (bEnemyPawn)
             PawnTarget = Pawn(Controller.Target);
 
-		bHit = super(KFMonster).MeleeDamageTarget(HitDamage * 1.75, PushDir * 3);
+        bHit = super(KFMonster).MeleeDamageTarget(HitDamage * 1.75, PushDir * 3);
 
         // A chance FP will settle down when the target is dead
-		if (bHit && bEnemyPawn && 
+        if (bHit && bEnemyPawn &&
             PawnTarget != None && PawnTarget.Health <= 0 && class'Utils'.static.BChance(RageStopAfterKillChance))
-			GoToState('');
+            GoToState('');
 
         return bHit;
     }

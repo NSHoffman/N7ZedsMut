@@ -1,11 +1,61 @@
-class N7_Husk extends KFChar.ZombieHusk_STANDARD;
+class N7_Husk extends KFChar.ZombieHusk_STANDARD
+    config(N7ZedsMut);
 
 /* Max interval between shots */
-var const float MinFireInterval;
-var const float MaxFireInterval;
+var config float MinFireInterval;
+var config float MaxFireInterval;
+
+var config float MovingAttackChance;
+var config int MovingAttackCertainDistance;
+
+var config string CustomMenuName;
+
+var bool bMovingAttack;
+
+replication {
+    reliable if (Role == ROLE_AUTHORITY)
+        CustomMenuName;
+}
+
+simulated function PostBeginPlay()
+{
+    super.PostBeginPlay();
+
+    SetupConfig();
+}
+
+simulated function PostNetBeginPlay()
+{
+    super.PostNetBeginPlay();
+
+    if (CustomMenuName != "")
+    {
+        default.MenuName = CustomMenuName;
+        MenuName = CustomMenuName;
+    }
+}
+
+// Config validation and setup
+function SetupConfig()
+{
+    if (MinFireInterval < 0 || MinFireInterval > 10 ||
+        MaxFireInterval < 0 || MaxFireInterval > 60 ||
+        MinFireInterval > MaxFireInterval)
+    {
+        MinFireInterval = 2.0;
+        MaxFireInterval = 4.0;
+    }
+
+    if (MovingAttackCertainDistance < 0 || MovingAttackCertainDistance > 10000)
+    {
+        MovingAttackCertainDistance = 2000;
+    }
+
+    MovingAttackChance = class'Utils'.static.FRatio(MovingAttackChance);
+}
 
 /**
- * For some reason original function used to 
+ * For some reason original function used to
  * explicitly override HuskFireProjClass to class'KFChar.HuskFireProjectile'
  */
 function SpawnTwoShots()
@@ -14,7 +64,14 @@ function SpawnTwoShots()
     local rotator FireRotation;
     local KFMonsterController KFMonstControl;
 
-    if (Controller != None && KFDoorMover(Controller.Target) != None)
+    if (Controller == None ||
+        IsInState('GettingOutOfTheWayOfShot') ||
+        Physics == PHYS_Falling)
+    {
+        return;
+    }
+
+    if (KFDoorMover(Controller.Target) != None)
     {
         Controller.Target.TakeDamage(22, self, Location, vect(0, 0, 0), class'KFMod.DamTypeBurned');
         return;
@@ -58,9 +115,9 @@ function SpawnTwoShots()
 function RangedAttack(Actor A)
 {
     local int LastFireTime;
-    local float NextFireTimeCooldown;
+    local float NextFireTimeCooldown, MovingAttackChanceByDistance;
 
-    if (bShotAnim) 
+    if (bShotAnim)
     {
         return;
     }
@@ -82,12 +139,32 @@ function RangedAttack(Actor A)
     }
 
     else if (!bDecapitated && (
-        KFDoorMover(A) != None 
-        || (!Region.Zone.bDistanceFog && VSize(A.Location - Location) <= 65535) 
+        KFDoorMover(A) != None
+        || (!Region.Zone.bDistanceFog && VSize(A.Location - Location) <= 65535)
         || (Region.Zone.bDistanceFog && VSizeSquared(A.Location - Location) < (Square(Region.Zone.DistanceFogEnd) * 0.8)))
     ) {
         bShotAnim = True;
-        SetAnimAction('ShootBurnsAndMove');
+
+        if (MovingAttackChance == 0)
+            MovingAttackChanceByDistance = 0;
+        else if (MovingAttackChance == 1 || MovingAttackCertainDistance <= VSize(A.Location - Location))
+            MovingAttackChanceByDistance = 1.0;
+        else
+            MovingAttackChanceByDistance = class'Utils'.static.FRatio(VSize(A.Location - Location) / float(MovingAttackCertainDistance));
+
+        bMovingAttack = KFDoorMover(A) == None && class'Utils'.static.BChance(0.3 * MovingAttackChance + 0.7 * MovingAttackChanceByDistance);
+
+        if (bMovingAttack)
+        {
+            SetAnimAction('ShootBurnsAndMove');
+            bMovingAttack = False;
+        }
+        else
+        {
+            SetAnimAction('ShootBurns');
+            Controller.bPreparingMove = True;
+            Acceleration = vect(0, 0, 0);
+        }
 
         NextFireTimeCooldown = FMin(MaxFireInterval, MinFireInterval + FRand() * ProjectileFireInterval);
         NextFireProjectileTime = Level.TimeSeconds + NextFireTimeCooldown;
@@ -103,14 +180,14 @@ simulated event SetAnimAction(name NewAction)
         return;
     }
 
-    switch (NewAction) 
+    switch (NewAction)
     {
         case 'Claw':
             meleeAnimIndex = Rand(3);
             NewAction = meleeAnims[meleeAnimIndex];
             CurrentDamtype = ZombieDamType[meleeAnimIndex];
             break;
-        
+
         case 'DoorBash':
             CurrentDamtype = ZombieDamType[Rand(3)];
             break;
@@ -123,7 +200,7 @@ simulated event SetAnimAction(name NewAction)
     {
         AnimAction = NewAction;
         bResetAnimAct = True;
-        ResetAnimActTime = Level.TimeSeconds+0.3;
+        ResetAnimActTime = Level.TimeSeconds + 0.3;
     }
 }
 
@@ -138,6 +215,14 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
         return 1;
     }
 
+    // moving attack is interrupted by stunning
+    if (ExpectingChannel == 1 && AnimName == 'KnockDown')
+    {
+        PlayAnim(AnimName,, 0.1, 1);
+        AnimBlendParams(1, 1.0, 0.0,,, True);
+        return 1;
+    }
+
     return DoAnimAction(AnimName);
 }
 
@@ -148,16 +233,22 @@ simulated function bool AnimNeedsWait(name TestAnim)
         return False;
     }
 
+    if (TestAnim == 'KnockDown')
+    {
+        return True;
+    }
+
     return super.AnimNeedsWait(TestAnim);
 }
 
 defaultProperties
 {
-    MenuName="N7 Husk"
+    CustomMenuName="N7 Husk"
     GroundSpeed=95.000000
     WaterSpeed=85.000000
-    MinFireInterval=1.500000
-    MaxFireInterval=3.500000
-    ProjectileFireInterval=10.00000
+    MinFireInterval=2.000000
+    MaxFireInterval=4.000000
+    MovingAttackChance=0.500000
+    MovingAttackCertainDistance=2000
     HuskFireProjClass=class'N7_HuskFireProjectile'
 }

@@ -5,7 +5,11 @@ var const float AdjustedHeadHealthModifier;
 
 simulated function PostBeginPlay()
 {
-    super(ZombieStalker).PostBeginPlay();
+    super.PostBeginPlay();
+
+    Health = default.Health;
+    HealthMax = default.HealthMax;
+    HeadHealth = default.HeadHealth;
 
     SetTimer(1, False);
 }
@@ -30,7 +34,7 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
     local int meleeAnimIndex;
     local float AnimDuration;
 
-    if (AnimName == 'ClawAndMove') 
+    if (AnimName == 'ClawAndMove')
     {
         meleeAnimIndex = Rand(3);
         AnimName = MeleeAnims[meleeAnimIndex];
@@ -38,8 +42,8 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
     }
 
     if (
-        AnimName == MeleeAnims[0] || 
-        AnimName == MeleeAnims[1] || 
+        AnimName == MeleeAnims[0] ||
+        AnimName == MeleeAnims[1] ||
         AnimName == MeleeAnims[2]
     ) {
         AnimDuration = GetAnimDuration(AnimName);
@@ -63,11 +67,11 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
 
 /** Removed blood splatters and burnified effect */
 function PlayHit(
-    float Damage, 
-    Pawn InstigatedBy, 
-    Vector HitLocation, 
-    class<DamageType> damageType, 
-    Vector Momentum, 
+    float Damage,
+    Pawn InstigatedBy,
+    Vector HitLocation,
+    class<DamageType> damageType,
+    Vector Momentum,
     optional int HitIdx)
 {
     local PlayerController PC;
@@ -92,15 +96,15 @@ function PlayHit(
     PC = PlayerController(Controller);
 
     bShowEffects = (
-        Level.NetMode != NM_Standalone || 
-        Level.TimeSeconds - LastRenderTime < 2.5 || 
-        InstigatedBy != None && PlayerController(InstigatedBy.Controller) != None || 
+        Level.NetMode != NM_Standalone ||
+        Level.TimeSeconds - LastRenderTime < 2.5 ||
+        InstigatedBy != None && PlayerController(InstigatedBy.Controller) != None ||
         PC != None);
-    
+
     if (!bShowEffects)
     {
         return;
-    } 
+    }
 
     HitRay = vect(0, 0, 0);
     if (InstigatedBy != None)
@@ -134,7 +138,7 @@ function PlayHit(
         HitNormal = Normal(vect(0, 0, 1) + VRand() * 0.2 + vect(0, 0, 2.8));
     }
 
-    /** 
+    /**
      * Snippets responsible for blood splatter projectile spawn, damageFX and M79 achievement stats are removed
      * As those are not needed for pseudo stalker hit/death handling
      */
@@ -212,7 +216,7 @@ simulated function CloakStalker()
     }
 }
 
-simulated function Tick(float DeltaTime) 
+simulated function Tick(float DeltaTime)
 {
     local PlayerController P;
     local float DistSquared;
@@ -320,12 +324,12 @@ simulated function Tick(float DeltaTime)
 
     /** END: KFMonster.Tick */
 
-    if (Level.NetMode != NM_DedicatedServer && !bCloaked) 
-    {   
+    if (Level.NetMode != NM_DedicatedServer && !bCloaked)
+    {
         CloakStalker();
     }
 
-    if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking) 
+    if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking)
     {
         Acceleration = AccelRate * Normal(LookTarget.Location - Location);
     }
@@ -403,15 +407,17 @@ simulated function ZombieCrispUp() {}
 
 defaultProperties
 {
-    MenuName="N7 Pseudo Stalker"
+    CustomMenuName="N7 Pseudo Stalker"
     ScoringValue=0
     Health=5
     HeadHealth=5
     HealthMax=5
     AdjustedHealthModifier=1.0
     AdjustedHeadHealthModifier=1.0
+    bPseudo=True
     bBlockActors=False
     bIgnoreEncroachers=True
+    bCanDistanceAttackDoors=False
     MotionDetectorThreat=0
     HitSound(0)=Sound'Inf_Weapons.panzerfaust60.faust_explode_distant02'
     DeathSound(0)=Sound'Inf_Weapons.panzerfaust60.faust_explode_distant02'

@@ -3,9 +3,24 @@ class N7_PseudoBoss extends N7_Boss;
 var const float AdjustedHealthModifier;
 var const float AdjustedHeadHealthModifier;
 
+var DamageInfo EvasionDamage;
+
+var bool bAboutToDie;
+
+var float LastEvadeTime;
+
+replication {
+    reliable if (Role == ROLE_AUTHORITY)
+        bAboutToDie;
+}
+
 simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
+
+    Health = default.Health;
+    HealthMax = default.HealthMax;
+    HeadHealth = default.HeadHealth;
 
     SetTimer(1, False);
 }
@@ -23,9 +38,132 @@ function Timer()
     {
         bUnlit = False;
     }
+
+    GoToState('SneakAround');
 }
 
-/** 
+simulated function Tick(float DeltaTime)
+{
+    local PlayerController P;
+    local float DistSquared;
+
+    // If we've flagged this character to be destroyed next tick, handle that
+    if (bDestroyNextTick && TimeSetDestroyNextTickTime < Level.TimeSeconds)
+    {
+        Destroy();
+    }
+
+    if (
+        bAboutToDie && Health > 0 && EvasionDamage.Damage > 0 &&
+        FMin(LastEvadeTime + 0.5, FMax(LastReplicateTime, LastSeenOrRelevantTime)) > LastEvadeTime)
+    {
+        TakeDamage(
+            EvasionDamage.Damage,
+            EvasionDamage.InstigatedBy,
+            EvasionDamage.Hitlocation,
+            EvasionDamage.Momentum,
+            EvasionDamage.DamageType,
+            EvasionDamage.HitIndex);
+
+        bAboutToDie = False;
+        EvasionDamage.Damage = 0;
+    }
+
+    // Make Zeds move faster if they aren't net relevant, or noone has seen them
+    // in a while. This well get the Zeds to the player in larger groups, and
+    // quicker - Ramm
+    if (Level.NetMode != NM_Client && CanSpeedAdjust())
+    {
+        if (Level.NetMode == NM_Standalone)
+        {
+            if (Level.TimeSeconds - LastRenderTime > 5.0)
+            {
+                P = Level.GetLocalPlayerController();
+
+                if (P != None && P.Pawn != None && Level.TimeSeconds - LastViewCheckTime > 1.0)
+                {
+                    LastViewCheckTime = Level.TimeSeconds;
+                    DistSquared = VSizeSquared(P.Pawn.Location - Location);
+
+                    if ((!P.Pawn.Region.Zone.bDistanceFog || (DistSquared < Square(P.Pawn.Region.Zone.DistanceFogEnd))) &&
+                        FastTrace(Location + EyePosition(), P.Pawn.Location + P.Pawn.EyePosition()))
+                    {
+                        LastSeenOrRelevantTime = Level.TimeSeconds;
+                        SetGroundSpeed(GetOriginalGroundSpeed());
+                    }
+                    else
+                    {
+                        SetGroundSpeed(default.GroundSpeed * (HiddenGroundSpeed / default.GroundSpeed));
+                    }
+                }
+            }
+            else
+            {
+                LastSeenOrRelevantTime = Level.TimeSeconds;
+                SetGroundSpeed(GetOriginalGroundSpeed());
+            }
+        }
+        else if (Level.NetMode == NM_DedicatedServer)
+        {
+            if (Level.TimeSeconds - LastReplicateTime > 0.5)
+            {
+                SetGroundSpeed(default.GroundSpeed * (300.0 / default.GroundSpeed));
+            }
+            else
+            {
+                LastSeenOrRelevantTime = Level.TimeSeconds;
+                SetGroundSpeed(GetOriginalGroundSpeed());
+            }
+        }
+        else if (Level.NetMode == NM_ListenServer)
+        {
+            if (Level.TimeSeconds - LastReplicateTime > 0.5 && Level.TimeSeconds - LastRenderTime > 5.0)
+            {
+                P = Level.GetLocalPlayerController();
+
+                if (P != None && P.Pawn != None && Level.TimeSeconds - LastViewCheckTime > 1.0)
+                {
+                    LastViewCheckTime = Level.TimeSeconds;
+                    DistSquared = VSizeSquared(P.Pawn.Location - Location);
+
+                    if ((!P.Pawn.Region.Zone.bDistanceFog || (DistSquared < Square(P.Pawn.Region.Zone.DistanceFogEnd))) &&
+                        FastTrace(Location + EyePosition(), P.Pawn.Location + P.Pawn.EyePosition()))
+                    {
+                        LastSeenOrRelevantTime = Level.TimeSeconds;
+                        SetGroundSpeed(GetOriginalGroundSpeed());
+                    }
+                    else
+                    {
+                        SetGroundSpeed(default.GroundSpeed * (300.0 / default.GroundSpeed));
+                    }
+                }
+            }
+            else
+            {
+                LastSeenOrRelevantTime = Level.TimeSeconds;
+                SetGroundSpeed(GetOriginalGroundSpeed());
+            }
+        }
+    }
+
+    if (bResetAnimAct && ResetAnimActTime < Level.TimeSeconds)
+    {
+        AnimAction = '';
+        bResetAnimAct = False;
+    }
+
+    if (Controller != None)
+    {
+        LookTarget = Controller.Enemy;
+    }
+
+    if (Level.NetMode != NM_DedicatedServer && !bCloaked)
+    {
+        CloakBoss();
+    }
+}
+
+/**
  * Unused MeleeClaw2 animation added
  * Attack animation rate increased
  * Chaingun attacks handling disabled
@@ -35,9 +173,9 @@ simulated function int DoAnimAction(name AnimName)
     local float AnimRate;
 
     if (
-        AnimName == 'MeleeClaw' || 
-        AnimName == 'MeleeClaw2' || 
-        AnimName == 'MeleeImpale' || 
+        AnimName == 'MeleeClaw' ||
+        AnimName == 'MeleeClaw2' ||
+        AnimName == 'MeleeImpale' ||
         AnimName == 'transition')
     {
         AnimRate = 1.25;
@@ -48,7 +186,7 @@ simulated function int DoAnimAction(name AnimName)
         }
         AnimBlendParams(1, 1.0, 0.0,, SpineBone1);
         PlayAnim(AnimName, AnimRate, 0.1, 1);
-        
+
         return 1;
     }
     else if (AnimName == 'RadialAttack')
@@ -67,11 +205,11 @@ simulated function int DoAnimAction(name AnimName)
 
 /** Removed blood splatters and burnified effect */
 function PlayHit(
-    float Damage, 
-    Pawn InstigatedBy, 
-    Vector HitLocation, 
-    class<DamageType> damageType, 
-    Vector Momentum, 
+    float Damage,
+    Pawn InstigatedBy,
+    Vector HitLocation,
+    class<DamageType> damageType,
+    Vector Momentum,
     optional int HitIdx)
 {
     local PlayerController PC;
@@ -96,15 +234,15 @@ function PlayHit(
     PC = PlayerController(Controller);
 
     bShowEffects = (
-        Level.NetMode != NM_Standalone || 
-        Level.TimeSeconds - LastRenderTime < 2.5 || 
-        InstigatedBy != None && PlayerController(InstigatedBy.Controller) != None || 
+        Level.NetMode != NM_Standalone ||
+        Level.TimeSeconds - LastRenderTime < 2.5 ||
+        InstigatedBy != None && PlayerController(InstigatedBy.Controller) != None ||
         PC != None);
-    
+
     if (!bShowEffects)
     {
         return;
-    } 
+    }
 
     HitRay = vect(0, 0, 0);
     if (InstigatedBy != None)
@@ -138,7 +276,7 @@ function PlayHit(
         HitNormal = Normal(vect(0, 0, 1) + VRand() * 0.2 + vect(0, 0, 2.8));
     }
 
-    /** 
+    /**
      * Snippets responsible for blood splatter projectile spawn, damageFX and M79 achievement stats are removed
      * As those are not needed for pseudo boss hit/death handling
      */
@@ -146,8 +284,8 @@ function PlayHit(
 
 /** Get rid of slomo and endgame state transition */
 function Died(
-    Controller Killer, 
-    class<DamageType> DamageType, 
+    Controller Killer,
+    class<DamageType> DamageType,
     Vector HitLocation)
 {
     super(KFMonster).Died(Killer, DamageType, HitLocation);
@@ -256,111 +394,6 @@ function RangedAttack(Actor A)
     }
 }
 
-simulated function Tick(float DeltaTime) 
-{
-    local PlayerController P;
-    local float DistSquared;
-
-    // If we've flagged this character to be destroyed next tick, handle that
-    if (bDestroyNextTick && TimeSetDestroyNextTickTime < Level.TimeSeconds)
-    {
-        Destroy();
-    }
-
-    // Make Zeds move faster if they aren't net relevant, or noone has seen them
-    // in a while. This well get the Zeds to the player in larger groups, and
-    // quicker - Ramm
-    if (Level.NetMode != NM_Client && CanSpeedAdjust())
-    {
-        if (Level.NetMode == NM_Standalone)
-        {
-            if (Level.TimeSeconds - LastRenderTime > 5.0)
-            {
-                P = Level.GetLocalPlayerController();
-
-                if (P != None && P.Pawn != None && Level.TimeSeconds - LastViewCheckTime > 1.0)
-                {
-                    LastViewCheckTime = Level.TimeSeconds;
-                    DistSquared = VSizeSquared(P.Pawn.Location - Location);
-
-                    if ((!P.Pawn.Region.Zone.bDistanceFog || (DistSquared < Square(P.Pawn.Region.Zone.DistanceFogEnd))) &&
-                        FastTrace(Location + EyePosition(), P.Pawn.Location + P.Pawn.EyePosition()))
-                    {
-                        LastSeenOrRelevantTime = Level.TimeSeconds;
-                        SetGroundSpeed(GetOriginalGroundSpeed());
-                    }
-                    else
-                    {
-                        SetGroundSpeed(default.GroundSpeed * (HiddenGroundSpeed / default.GroundSpeed));
-                    }
-                }
-            }
-            else
-            {
-                LastSeenOrRelevantTime = Level.TimeSeconds;
-                SetGroundSpeed(GetOriginalGroundSpeed());
-            }
-        }
-        else if (Level.NetMode == NM_DedicatedServer)
-        {
-            if (Level.TimeSeconds - LastReplicateTime > 0.5)
-            {
-                SetGroundSpeed(default.GroundSpeed * (300.0 / default.GroundSpeed));
-            }
-            else
-            {
-                LastSeenOrRelevantTime = Level.TimeSeconds;
-                SetGroundSpeed(GetOriginalGroundSpeed());
-            }
-        }
-        else if (Level.NetMode == NM_ListenServer)
-        {
-            if (Level.TimeSeconds - LastReplicateTime > 0.5 && Level.TimeSeconds - LastRenderTime > 5.0)
-            {
-                P = Level.GetLocalPlayerController();
-
-                if (P != None && P.Pawn != None && Level.TimeSeconds - LastViewCheckTime > 1.0)
-                {
-                    LastViewCheckTime = Level.TimeSeconds;
-                    DistSquared = VSizeSquared(P.Pawn.Location - Location);
-
-                    if ((!P.Pawn.Region.Zone.bDistanceFog || (DistSquared < Square(P.Pawn.Region.Zone.DistanceFogEnd))) &&
-                        FastTrace(Location + EyePosition(), P.Pawn.Location + P.Pawn.EyePosition()))
-                    {
-                        LastSeenOrRelevantTime = Level.TimeSeconds;
-                        SetGroundSpeed(GetOriginalGroundSpeed());
-                    }
-                    else
-                    {
-                        SetGroundSpeed(default.GroundSpeed * (300.0 / default.GroundSpeed));
-                    }
-                }
-            }
-            else
-            {
-                LastSeenOrRelevantTime = Level.TimeSeconds;
-                SetGroundSpeed(GetOriginalGroundSpeed());
-            }
-        }
-    }
-
-    if (bResetAnimAct && ResetAnimActTime < Level.TimeSeconds)
-    {
-        AnimAction = '';
-        bResetAnimAct = False;
-    }
-
-    if (Controller != None)
-    {
-        LookTarget = Controller.Enemy;
-    }
-
-    if (Level.NetMode != NM_DedicatedServer && !bCloaked) 
-    {   
-        CloakBoss();
-    }
-}
-
 /**
  * Apply StalkerGlow effect before hit
  * To emphasize pseudo/holographic nature of this ZED
@@ -373,6 +406,25 @@ function ApplyHolographicGlow(name AnimName, optional float Rate)
     bUnlit = True;
     SetOverlayMaterial(Finalblend'KFX.StalkerGlow', AnimDuration, True);
     SetTimer(AnimDuration, False);
+}
+
+state SneakAround
+{
+Begin:
+    CloakBoss();
+
+    while (true)
+    {
+        Sleep(0.5);
+
+        if (!bCloaked && !bShotAnim)
+            CloakBoss();
+
+        if (!Controller.IsInState('ZombieHunt') && !Controller.IsInState('WaitForAnim'))
+        {
+            Controller.GoToState('ZombieHunt');
+        }
+    }
 }
 
 state ZombieDying
@@ -432,7 +484,7 @@ simulated function ZombieCrispUp() {}
 
 defaultProperties
 {
-    MenuName="N7 Pseudo Patriarch"
+    CustomMenuName="N7 Pseudo Patriarch"
     ScoringValue=0
     Health=5
     HeadHealth=5
@@ -441,7 +493,10 @@ defaultProperties
     AdjustedHeadHealthModifier=1.0
     bBlockActors=False
     bIgnoreEncroachers=True
+    bPseudo=True
     MotionDetectorThreat=0
+    bCanDistanceAttackDoors=False
+    ControllerClass=class'KFChar.BossZombieController'
     HitSound(0)=Sound'Inf_Weapons.panzerfaust60.faust_explode_distant02'
     DeathSound(0)=Sound'Inf_Weapons.panzerfaust60.faust_explode_distant02'
 }

@@ -1,12 +1,31 @@
-class N7_Scrake extends KFChar.ZombieScrake_STANDARD;
+class N7_Scrake extends KFChar.ZombieScrake_STANDARD
+    config(N7ZedsMut);
 
 var float ChargeGroundSpeed;
+
+var config string CustomMenuName;
+
+replication {
+    reliable if (Role == ROLE_AUTHORITY)
+        CustomMenuName;
+}
 
 simulated event PostBeginPlay()
 {
     super(KFMonster).PostBeginPlay();
 
     ChargeGroundSpeed = OriginalGroundSpeed * AttackChargeRate;
+}
+
+simulated function PostNetBeginPlay()
+{
+    super.PostNetBeginPlay();
+
+    if (CustomMenuName != "")
+    {
+        default.MenuName = CustomMenuName;
+        MenuName = CustomMenuName;
+    }
 }
 
 function RangedAttack(Actor A)
@@ -53,5 +72,5 @@ state RunningState
 
 defaultProperties
 {
-    MenuName="N7 Scrake"
+    CustomMenuName="N7 Scrake"
 }

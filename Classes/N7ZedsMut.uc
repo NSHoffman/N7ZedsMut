@@ -28,7 +28,7 @@ const B_REPLACE_BOSS_KEY = "bReplaceBoss";
 var config bool
     bEnableAutoReplacement,
     bUseOriginalZedSkins,
-    bReplaceClot, 
+    bReplaceClot,
     bReplaceCrawler,
     bReplaceGorefast,
     bReplaceStalker,
@@ -53,13 +53,13 @@ var class<N7ZedsConfigMutateAPI> MutateApiClass;
  INITIALIZATION
  *************************/
 
-simulated event PostBeginPlay() 
+simulated event PostBeginPlay()
 {
     local KFGameType KFGT;
 
     KFGT = KFGameType(Level.Game);
 
-    if (KFGT == None) 
+    if (KFGT == None)
     {
         Destroy();
         return;
@@ -77,13 +77,48 @@ function SaveConfiguration()
 {
     self.SaveConfig();
 
+    MutateApiClass.static.StaticSaveConfig();
+
+    class'N7_Clot'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Clot');
+
+    class'N7_Bloat'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Bloat');
+
+    class'N7_Gorefast'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Gorefast');
+
+    class'N7_Crawler'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Crawler');
+
     class'N7_Stalker'.static.StaticSaveConfig();
-    ClearDefaultConfiguration(class'N7_Stalker');    
+    ClearDefaultConfiguration(class'N7_Stalker');
+
+    class'N7_PseudoStalker'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_PseudoStalker');
+    class'N7_PseudoStalker'.static.StaticClearConfig("MinPseudos");
+    class'N7_PseudoStalker'.static.StaticClearConfig("MaxPseudos");
+
+    class'N7_Husk'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Husk');
+
+    class'N7_Siren'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Siren');
+
+    class'N7_Scrake'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Scrake');
+
+    class'N7_Fleshpound'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_Fleshpound');
 
     class'N7_Boss'.static.StaticSaveConfig();
     ClearDefaultConfiguration(class'N7_Boss');
 
-    MutateApiClass.static.StaticSaveConfig();   
+    class'N7_PseudoBoss'.static.StaticSaveConfig();
+    ClearDefaultConfiguration(class'N7_PseudoBoss');
+    class'N7_PseudoBoss'.static.StaticClearConfig("CombatStages");
+    class'N7_PseudoBoss'.static.StaticClearConfig("PatHealth");
+    class'N7_PseudoBoss'.static.StaticClearConfig("CGDamage");
 }
 
 function ClearDefaultConfiguration(class<KFMonster> MC)
@@ -103,16 +138,16 @@ function ClearDefaultConfiguration(class<KFMonster> MC)
 
 function SetupMonsterCollection(KFGameType KFGT, optional bool bGameInit)
 {
-    ResolveMonstersCollection();  
+    ResolveMonstersCollection();
 
-    AdjustMonsterClasses();
+    AdjustMonsterClasses(KFGT);
 
     AdjustShortMonsterSquads();
     AdjustNormalMonsterSquads();
     AdjustLongMonsterSquads();
     AdjustFinalMonsterSquads();
 
-    AdjustEndGameBoss();
+    AdjustEndGameBoss(KFGT);
 
     ApplyMonstersCollection(KFGT, bGameInit);
 }
@@ -125,21 +160,28 @@ function ResolveMonstersCollection()
         N7MonstersCollectionClass = default.N7MonstersCollectionClass;
 }
 
-function AdjustMonsterClasses()
+function AdjustMonsterClasses(KFGameType KFGT)
 {
     local int i;
 
+    KFGT.MonsterClasses.Length = N7MonstersCollectionClass.default.MonsterClasses.Length;
     for (i = 0; i < N7MonstersCollectionClass.default.MonsterClasses.Length; i++)
     {
         if (ShouldReplaceZED(N7MonstersCollectionClass.default.MonsterClasses[i].MClassName))
         {
             FinalMonstersCollectionClass.default.MonsterClasses[i] = N7MonstersCollectionClass.default.MonsterClasses[i];
             FinalMonstersCollectionClass.default.StandardMonsterClasses[i] = N7MonstersCollectionClass.default.StandardMonsterClasses[i];
+
+            KFGT.MonsterClasses[i].MClassName = N7MonstersCollectionClass.default.MonsterClasses[i].MClassName;
+            KFGT.MonsterClasses[i].Mid = N7MonstersCollectionClass.default.MonsterClasses[i].Mid;
         }
         else
         {
             FinalMonstersCollectionClass.default.MonsterClasses[i] = InitialMonstersCollectionClass.default.MonsterClasses[i];
             FinalMonstersCollectionClass.default.StandardMonsterClasses[i] = InitialMonstersCollectionClass.default.StandardMonsterClasses[i];
+
+            KFGT.MonsterClasses[i].MClassName = InitialMonstersCollectionClass.default.MonsterClasses[i].MClassName;
+            KFGT.MonsterClasses[i].Mid = InitialMonstersCollectionClass.default.MonsterClasses[i].Mid;
         }
     }
 }
@@ -224,12 +266,18 @@ function AdjustFinalMonsterSquads()
     }
 }
 
-function AdjustEndGameBoss()
+function AdjustEndGameBoss(KFGameType KFGT)
 {
     if (bReplaceBoss)
+    {
         FinalMonstersCollectionClass.default.EndGameBossClass = N7MonstersCollectionClass.default.EndGameBossClass;
+        KFGT.EndGameBossClass = N7MonstersCollectionClass.default.EndGameBossClass;
+    }
     else
+    {
         FinalMonstersCollectionClass.default.EndGameBossClass = InitialMonstersCollectionClass.default.EndGameBossClass;
+        KFGT.EndGameBossClass = InitialMonstersCollectionClass.default.EndGameBossClass;
+    }
 }
 
 function ApplyMonstersCollection(KFGameType KFGT, bool bGameInit)
@@ -250,7 +298,7 @@ function ApplyMonstersCollection(KFGameType KFGT, bool bGameInit)
 
 function bool ShouldReplaceZED(string ZedClass)
 {
-    switch (ZedClass) 
+    switch (ZedClass)
     {
         case N7MonstersCollectionClass.default.MonsterClasses[0].MClassName  : return bReplaceClot;
         case N7MonstersCollectionClass.default.MonsterClasses[1].MClassName  : return bReplaceCrawler;
@@ -267,7 +315,7 @@ function bool ShouldReplaceZED(string ZedClass)
     }
 }
 
-static function FillPlayInfo(PlayInfo PlayInfo) 
+static function FillPlayInfo(PlayInfo PlayInfo)
 {
     local string GeneralSettings, ZedsSettings;
 
@@ -290,9 +338,9 @@ static function FillPlayInfo(PlayInfo PlayInfo)
     PlayInfo.AddSetting(ZedsSettings, B_REPLACE_BOSS_KEY, "Replace Boss", 0, 0, "Check",,,, True);
 }
 
-static event string GetDescriptionText(string Property) 
+static event string GetDescriptionText(string Property)
 {
-    switch (Property) 
+    switch (Property)
     {
         case B_USE_ORIGINAL_ZED_SKINS_KEY   : return "Use original ZEDs skins";
         case B_REPLACE_CLOT_KEY             : return "Replace original Clots";
@@ -323,7 +371,7 @@ function Mutate(string MutateString, PlayerController Sender)
 
     KFGT = KFGameType(Level.Game);
     Split(MutateString, " ", mutateArgs);
-    
+
     if (KFGT != None)
     {
         mutateCommand = new(self) MutateApiClass;
@@ -340,7 +388,7 @@ function Mutate(string MutateString, PlayerController Sender)
     super.Mutate(MutateString, Sender);
 }
 
-defaultProperties 
+defaultProperties
 {
     FriendlyName="N7 Zeds"
     Description="Mutator modifies vanilla ZEDs providing them with new appearance and behaviour features + fixes a bunch of well-known issues and exploits which could negatively affect the original gameplay."
@@ -351,7 +399,7 @@ defaultProperties
     FinalMonstersCollectionClass=class'N7_MonstersCollection_FINAL'
 
     MutateApiClass=class'N7ZedsConfigMutateAPI'
-    
+
     bEnableAutoReplacement=True
     bUseOriginalZedSkins=False
 

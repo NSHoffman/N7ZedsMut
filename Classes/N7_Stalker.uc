@@ -1,6 +1,8 @@
 class N7_Stalker extends KFChar.ZombieStalker_STANDARD
     config(N7ZedsMut);
 
+var const bool bPseudo;
+
 /**
  * Each stalker has a chance to spawn
  * a squad of pseudos, projections
@@ -9,19 +11,48 @@ class N7_Stalker extends KFChar.ZombieStalker_STANDARD
 var class<N7_Stalker> PseudoClass;
 var array<N7_Stalker> PseudoSquad;
 
-var int MinPseudoSquadSize;
-var int MaxPseudoSquadSize;
+var config int MinPseudos;
+var config int MaxPseudos;
 
-var config bool bSpawnPseudos;
+var config string CustomMenuName;
+
+replication {
+    reliable if (Role == ROLE_AUTHORITY)
+        CustomMenuName;
+}
 
 /** Spawning pseudo stalkers squad */
 simulated function PostBeginPlay()
 {
-    super.PostBeginPlay();
-
-    if (bSpawnPseudos)
+    if (!bPseudo)
     {
+        SetupConfig();
         SpawnPseudoSquad();
+    }
+
+    super.PostBeginPlay();
+}
+
+simulated function PostNetBeginPlay()
+{
+    super.PostNetBeginPlay();
+
+    if (CustomMenuName != "")
+    {
+        default.MenuName = CustomMenuName;
+        MenuName = CustomMenuName;
+    }
+}
+
+// Config validation and setup
+function SetupConfig()
+{
+    if (MinPseudos < 0 || MinPseudos > 10 ||
+        MaxPseudos < 0 || MaxPseudos > 10 ||
+        MinPseudos > MaxPseudos)
+    {
+        MinPseudos = 0;
+        MaxPseudos = 1;
     }
 }
 
@@ -39,10 +70,10 @@ simulated event SetAnimAction(name NewAction)
     }
 
     ExpectingChannel = AttackAndMoveDoAnimAction(NewAction);
-    
+
     bWaitForAnim = False;
 
-    if (Level.NetMode != NM_Client) 
+    if (Level.NetMode != NM_Client)
     {
         AnimAction = NewAction;
         bResetAnimAct = True;
@@ -54,7 +85,7 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
 {
     local int meleeAnimIndex;
 
-    if (AnimName == 'ClawAndMove') 
+    if (AnimName == 'ClawAndMove')
     {
         meleeAnimIndex = Rand(3);
         AnimName = MeleeAnims[meleeAnimIndex];
@@ -62,8 +93,8 @@ simulated function int AttackAndMoveDoAnimAction(name AnimName)
     }
 
     if (
-        AnimName == MeleeAnims[0] || 
-        AnimName == MeleeAnims[1] || 
+        AnimName == MeleeAnims[0] ||
+        AnimName == MeleeAnims[1] ||
         AnimName == MeleeAnims[2]
     ) {
         AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
@@ -82,12 +113,12 @@ simulated function Tick(float DeltaTime)
 
     super(KFMonster).Tick(DeltaTime);
 
-    /** 
+    /**
      * This part is taken from parent ZombieStalker class
      * because all the material sources are hardcoded inside its methods bodies
      * but need to be changed here
      */
-    if (Level.NetMode != NM_DedicatedServer) 
+    if (Level.NetMode != NM_DedicatedServer)
     {
         if (bZapped)
         {
@@ -98,9 +129,9 @@ simulated function Tick(float DeltaTime)
             NextCheckTime = Level.TimeSeconds + 0.5;
 
             if (
-                LocalKFHumanPawn != None 
-                && LocalKFHumanPawn.Health > 0 
-                && LocalKFHumanPawn.ShowStalkers() 
+                LocalKFHumanPawn != None
+                && LocalKFHumanPawn.Health > 0
+                && LocalKFHumanPawn.ShowStalkers()
                 && VSizeSquared(Location - LocalKFHumanPawn.Location) < LocalKFHumanPawn.GetStalkerViewDistanceMulti() * 640000.0 // 640000 = 800 Units
             )
             {
@@ -131,7 +162,7 @@ simulated function Tick(float DeltaTime)
     }
 
 
-    if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking) 
+    if (Role == ROLE_Authority && bKeepAccelerationWhileAttacking)
     {
         Acceleration = AccelRate * Normal(LookTarget.Location - Location);
     }
@@ -142,7 +173,7 @@ function RangedAttack(Actor A)
     local bool bDoRangedAttack;
     bDoRangedAttack = CanAttack(A) && !(bShotAnim || Physics == PHYS_Swimming);
 
-    if (bDoRangedAttack) 
+    if (bDoRangedAttack)
     {
         bShotAnim = True;
         SetAnimAction('ClawAndMove');
@@ -154,12 +185,12 @@ function SpawnPseudoSquad()
     local int PseudoSquadSize, i;
     local N7_Stalker CurrentPseudoStalker;
 
-    if (MaxPseudoSquadSize <= 0 || MaxPseudoSquadSize < MinPseudoSquadSize)
+    if (MaxPseudos <= 0 || MaxPseudos < MinPseudos)
     {
         return;
     }
 
-    PseudoSquadSize = MinPseudoSquadSize + Rand(MaxPseudoSquadSize - MinPseudoSquadSize + 1);
+    PseudoSquadSize = MinPseudos + Rand(MaxPseudos - MinPseudos + 1);
 
     for (i = 0; i < PseudoSquadSize; i++)
     {
@@ -167,7 +198,7 @@ function SpawnPseudoSquad()
 
         if (CurrentPseudoStalker != None)
         {
-            PseudoSquad[i] = CurrentPseudoStalker;
+            PseudoSquad[PseudoSquad.Length] = CurrentPseudoStalker;
         }
     }
 }
@@ -193,7 +224,7 @@ function KillPseudoSquad()
     PseudoSquad.Length = 0;
 }
 
-/** 
+/**
  * The whole purpose of overriding the methods below
  * is to replace hardcoded materials with property values
  */
@@ -266,10 +297,10 @@ simulated function UnCloakStalker()
 
         // 25% chance of our Enemy saying something about us being invisible
         if (
-            Level.NetMode != NM_Client 
-            && !KFGameType(Level.Game).bDidStalkerInvisibleMessage 
-            && FRand() < 0.25 
-            && Controller.Enemy != None 
+            Level.NetMode != NM_Client
+            && !KFGameType(Level.Game).bDidStalkerInvisibleMessage
+            && FRand() < 0.25
+            && Controller.Enemy != None
             && PlayerController(Controller.Enemy.Controller) != None
         )
         {
@@ -322,7 +353,7 @@ simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
 {
     super(KFMonster).PlayDying(DamageType, HitLoc);
 
-    if (bSpawnPseudos)
+    if (!bPseudo)
     {
         KillPseudoSquad();
     }
@@ -343,12 +374,12 @@ simulated function PlayDying(class<DamageType> DamageType, Vector HitLoc)
 
 defaultProperties
 {
-    MenuName="N7 Stalker"
+    CustomMenuName="N7 Stalker"
     GroundSpeed=210.000000
     WaterSpeed=190.000000
-    bSpawnPseudos=True
-    MinPseudoSquadSize=0
-    MaxPseudoSquadSize=3
+    bPseudo=False
+    MinPseudos=0
+    MaxPseudos=1
     PseudoClass=class'N7_PseudoStalker'
     Skins(2)=FinalBlend'KF_Specimens_Trip_T.stalker_fb'
     Skins(3)=Combiner'KF_Specimens_Trip_T.stalker_cmb'

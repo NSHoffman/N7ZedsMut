@@ -1,8 +1,16 @@
-class N7_Gorefast extends KFChar.ZombieGorefast_STANDARD;
+class N7_Gorefast extends KFChar.ZombieGorefast_STANDARD
+    config(N7ZedsMut);
 
 var const int RageDistance;
 var const float ChargeSpeedModifier;
 var float ChargeGroundSpeed;
+
+var config string CustomMenuName;
+
+replication {
+    reliable if (Role == ROLE_AUTHORITY)
+        CustomMenuName;
+}
 
 simulated event PostBeginPlay()
 {
@@ -11,13 +19,24 @@ simulated event PostBeginPlay()
     ChargeGroundSpeed = OriginalGroundSpeed * ChargeSpeedModifier;
 }
 
+simulated function PostNetBeginPlay()
+{
+    super.PostNetBeginPlay();
+
+    if (CustomMenuName != "")
+    {
+        default.MenuName = CustomMenuName;
+        MenuName = CustomMenuName;
+    }
+}
+
 function RangedAttack(Actor A)
 {
     super(KFMonster).RangedAttack(A);
 
     if (
-        !bShotAnim && 
-        !bDecapitated && 
+        !bShotAnim &&
+        !bDecapitated &&
         VSize(A.Location - Location) <= RageDistance
     ) {
         GoToState('RunningState');
@@ -82,7 +101,7 @@ Begin:
     GoTo('CheckCharge');
 CheckCharge:
     if (
-        Controller != None && 
+        Controller != None &&
         Controller.Target != None &&
         VSize(Controller.Target.Location - Location) < RageDistance
     ) {
@@ -96,7 +115,7 @@ CheckCharge:
 
 defaultProperties
 {
-    MenuName="N7 Gorefast"
+    CustomMenuName="N7 Gorefast"
     ChargeSpeedModifier=1.875
     GroundSpeed=140.000000
     RageDistance=1000

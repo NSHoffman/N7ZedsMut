@@ -1,74 +1,124 @@
-class N7_Fleshpound extends N7_FleshpoundGlowing;
+class N7_Fleshpound extends N7_FleshpoundGlowing
+    config(N7ZedsMut);
+
+var config string CustomMenuName;
+
+var config int RageStopDistance;
+var config float RageStopAfterKillChance;
+
+replication {
+    reliable if (Role == ROLE_AUTHORITY)
+        CustomMenuName;
+}
+
+simulated function PostBeginPlay()
+{
+    super.PostBeginPlay();
+
+    RageStopDistance = Max(0, RageStopDistance);
+    RageStopAfterKillChance = class'Utils'.static.FRatio(RageStopAfterKillChance);
+}
+
+simulated function PostNetBeginPlay()
+{
+    super.PostNetBeginPlay();
+
+    if (CustomMenuName != "")
+    {
+        default.MenuName = CustomMenuName;
+        MenuName = CustomMenuName;
+    }
+}
 
 state RageCharging
 {
-    Ignores StartCharging;
+ignores StartCharging;
 
     function BeginState()
     {
-        if (!bZapped) 
+        local float DifficultyModifier;
+
+        if (!bZapped)
         {
             bChargingPlayer = True;
 
             if (Level.NetMode != NM_DedicatedServer)
-            {
                 ClientChargingAnims();
-            }
 
+            if (Level.Game.GameDifficulty < 2.0)
+                DifficultyModifier = 1.00;
+            else if (Level.Game.GameDifficulty < 4.0)
+                DifficultyModifier = 1.5;
+            else if (Level.Game.GameDifficulty < 5.0)
+                DifficultyModifier = 2.0;
+            else
+                DifficultyModifier = 3.0;
+
+            RageEndTime = (Level.TimeSeconds + 5 * DifficultyModifier) + (FRand() * 6 * DifficultyModifier);
             NetUpdateTime = Level.TimeSeconds - 1;
         }
-        else 
+        else
         {
             GoToState('');
         }
     }
 
-    function Tick(float DeltaTime)
+    function Tick(float Delta)
     {
-        if (!bShotAnim) 
+        if (!bShotAnim)
         {
             SetGroundSpeed(OriginalGroundSpeed * 2.3);
+
+            if (!bFrustrated && !bZedUnderControl && LookTarget != None &&
+                Level.TimeSeconds > RageEndTime && VSize(LookTarget.Location - Location) > RageStopDistance)
+            {
+                GoToState('');
+            }
         }
 
-        // Keep the flesh pound moving toward its target when attacking
-        if (Role == ROLE_Authority && bShotAnim && LookTarget != None) 
+        if (Role == ROLE_Authority && bShotAnim)
         {
-            Acceleration = AccelRate * Normal(LookTarget.Location - Location);
+            if (LookTarget != None)
+            {
+                Acceleration = AccelRate * Normal(LookTarget.Location - Location);
+            }
         }
 
-        global.Tick(DeltaTime);
+        global.Tick(Delta);
     }
 
-    // Even hitting a target won't settle raged FP down
-    function bool MeleeDamageTarget(int hitdamage, vector pushdir)
+    function bool MeleeDamageTarget(int HitDamage, Vector PushDir)
     {
-        return super(KFMonster).MeleeDamageTarget(hitdamage * 1.75, pushdir * 3);
+        local bool bHit, bEnemyPawn;
+        local Pawn PawnTarget;
+
+        bEnemyPawn = Controller.Target == Controller.Enemy;
+
+        if (bEnemyPawn)
+            PawnTarget = Pawn(Controller.Target);
+
+        bHit = super(KFMonster).MeleeDamageTarget(HitDamage * 1.75, PushDir * 3);
+
+        // A chance FP will settle down when the target is dead
+        if (bHit && bEnemyPawn &&
+            PawnTarget != None && PawnTarget.Health <= 0 && class'Utils'.static.BChance(RageStopAfterKillChance))
+            GoToState('');
+
+        return bHit;
     }
-}
 
-/**
- * State where the zed is charging to a marked location.
- * Not sure if we need this since its just like RageCharging,
- * but keeping it here for now in case we need to implement some
- * custom behavior for this state
- */ 
-state ChargeToMarker {
-    Ignores StartCharging;
-
-    function Tick(float DeltaTime)
+    function DoorAttack(Actor A)
     {
-        if (!bShotAnim) 
-        {
-            SetGroundSpeed(OriginalGroundSpeed * 2.3);
-        }
+        if (bShotAnim || Physics == PHYS_Swimming)
+            return;
 
-        // Keep the flesh pound moving toward its target when attacking
-        if (Role == ROLE_Authority && bShotAnim && LookTarget != None) 
+        if (A != None)
         {
-            Acceleration = AccelRate * Normal(LookTarget.Location - Location);
-        }
+            bShotAnim = True;
+            Controller.Target = A;
 
-        global.Tick(DeltaTime);
+            SetAnimAction('DoorBash');
+        }
     }
 }
 
@@ -93,5 +143,7 @@ simulated function PostNetReceive()
 
 defaultProperties
 {
-    MenuName="N7 Fleshpound"
+    CustomMenuName="N7 Fleshpound"
+    RageStopDistance=750
+    RageStopAfterKillChance=0.340000
 }

@@ -42,12 +42,12 @@ struct CombatStage
 
         // Chance of moving when attacking with chaingun
         CGMoveChance,
-        // Chance of charging after players after being severely damaged
-        // during chaingun attack
-        CGChargeChance,
-        // Amount of damage in damage/health ratio needed for patriarch to charge after players
-        // during chaingun attack
-        CGChargeDamageThreshold,
+        // Chance of switching to running chaingun attack after being severely damaged
+        CGRunChance,
+        // Chance of charging at nearby player when damaged enough during chaingun attack
+        CGChargeAtNearbyChance,
+        // Amount of damage in damage/health ratio needed for patriarch to speed up during chaingun attack
+        CGRunDamageThreshold,
 
         CGFireRate,
 
@@ -129,13 +129,13 @@ var class<BossLAWProj> LAWProjClass;
 
 var const bool bPseudo;
 var bool bMovingChaingunAttack;
-var bool bChaingunChargingPlayer;
+var bool bRunningChaingunAttack;
 
 replication
 {
     reliable if (Role == ROLE_AUTHORITY)
         bMovingChaingunAttack,
-        bChaingunChargingPlayer;
+        bRunningChaingunAttack;
     reliable if (Role == ROLE_AUTHORITY)
         CustomMenuName;
 }
@@ -238,7 +238,8 @@ function SetupConfig()
 
         CombatStages[i].KiteChance = class'Utils'.static.FRatio(CombatStages[i].KiteChance);
         CombatStages[i].CGMoveChance = class'Utils'.static.FRatio(CombatStages[i].CGMoveChance);
-        CombatStages[i].CGChargeChance = class'Utils'.static.FRatio(CombatStages[i].CGChargeChance);
+        CombatStages[i].CGRunChance = class'Utils'.static.FRatio(CombatStages[i].CGRunChance);
+        CombatStages[i].CGChargeAtNearbyChance = class'Utils'.static.FRatio(CombatStages[i].CGChargeAtNearbyChance);
         CombatStages[i].ShootObstacleChance = class'Utils'.static.FRatio(CombatStages[i].ShootObstacleChance);
         CombatStages[i].ShieldChance = class'Utils'.static.FRatio(CombatStages[i].ShieldChance);
         CombatStages[i].SneakAroundOnHealChance = class'Utils'.static.FRatio(CombatStages[i].SneakAroundOnHealChance);
@@ -254,7 +255,7 @@ function SetupConfig()
         CombatStages[i].CGFireRate = class'Utils'.static.FRatio(CombatStages[i].CGFireRate);
 
         CombatStages[i].ForceChargeDamageThreshold = class'Utils'.static.FRatio(CombatStages[i].ForceChargeDamageThreshold);
-        CombatStages[i].CGChargeDamageThreshold = class'Utils'.static.FRatio(CombatStages[i].CGChargeDamageThreshold);
+        CombatStages[i].CGRunDamageThreshold = class'Utils'.static.FRatio(CombatStages[i].CGRunDamageThreshold);
         CombatStages[i].PseudoSwitchDamageThreshold = class'Utils'.static.FRatio(CombatStages[i].PseudoSwitchDamageThreshold);
     }
 }
@@ -755,6 +756,8 @@ function TakeDamage(
             !IsInState('RadialAttack') &&
             !IsInState('Healing') &&
             !IsInState('Escaping') &&
+            !IsInState('FireMissile') &&
+            !IsInState('FireChaingun') &&
             Level.TimeSeconds - LastPseudoSwitchTime > GetCombatStage().PseudoSwitchCooldown &&
             class'Utils'.static.BChance(GetCombatStage().PseudoSwitchChance) &&
             DamageToHealthRatio > GetCombatStage().PseudoSwitchDamageThreshold &&
@@ -787,7 +790,7 @@ function TakeDamage(
         }
 
         // Charging from damage (implementation in ZombieBoss::TakeDamage doesn't work properly)
-        if (LastDamagedTime > 0 && Level.TimeSeconds - LastDamagedTime > 10.0)
+        if (LastDamagedTime > 0 && Level.TimeSeconds - LastDamagedTime > (5.0 + FRand() * 5.0))
         {
             DamageToCharge = 0;
         }
@@ -1407,7 +1410,7 @@ state FireChaingun
     function EndState()
     {
         bMovingChaingunAttack = False;
-        bChaingunChargingPlayer = False;
+        bRunningChaingunAttack = False;
         bCanStrafe = False;
         super.EndState();
     }
@@ -1416,7 +1419,7 @@ state FireChaingun
     {
         super(KFMonster).Tick(Delta);
 
-        if (bChaingunChargingPlayer)
+        if (bRunningChaingunAttack)
         {
             SetGroundSpeed(GetOriginalGroundSpeed() * 1.75);
         }
@@ -1520,7 +1523,7 @@ state FireChaingun
             R = Rotation;
 
         // Accuracy increased when it's not a moving attack
-        if (bChaingunChargingPlayer)
+        if (bRunningChaingunAttack)
             Dir = Normal(Vector(R) + VRand() * 0.07);
         else if (bMovingChaingunAttack)
             Dir = Normal(Vector(R) + VRand() * 0.05);
@@ -1583,17 +1586,23 @@ state FireChaingun
 
             // if someone is shooting us heavily during moving chaingun attack
             // approach them at higher speed
-            if (!bChaingunChargingPlayer && bMovingChaingunAttack &&
-                class'Utils'.static.BChance(GetCombatStage().CGChargeChance) &&
-                DamageToHealthRatio > GetCombatStage().CGChargeDamageThreshold)
+            if (!bRunningChaingunAttack && bMovingChaingunAttack &&
+                class'Utils'.static.BChance(GetCombatStage().CGRunChance) &&
+                DamageToHealthRatio > GetCombatStage().CGRunDamageThreshold)
             {
-                bChaingunChargingPlayer = True;
+                bRunningChaingunAttack = True;
+                DamageToCharge = 0;
+
                 return;
             }
             // if someone nearby is shooting us, just charge them
-            else if (!bChaingunChargingPlayer &&
-                (DamageToHealthRatio > 0.05 && DamagerDistSq < (500 * 500)))
+            else if (!bRunningChaingunAttack &&
+                class'Utils'.static.BChance(GetCombatStage().CGChargeAtNearbyChance) &&
+                (DamageToHealthRatio > GetCombatStage().ForceChargeDamageThreshold && DamagerDistSq < (500 * 500)))
             {
+                DamageToCharge = 0;
+                LastForceChargeTime = Level.TimeSeconds;
+
                 SetAnimAction('transition');
                 GoToState('Charging');
                 return;
@@ -1891,15 +1900,15 @@ defaultProperties
 {
     CustomMenuName="N7 Patriarch"
 
-    CombatStages(0)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.75,ChargeCooldown=5.0,ForceChargeCooldown=5.0,ForceChargeDamageThreshold=0.1,MaxChargeGroupDistance=400,MaxChargeSingleDistance=700,RadialAttackCirclersChance=0.1,CGShots=75,CGFireRate=0.05,CGChargeChance=0.1,CGChargeDamageThreshold=0.15,CGMoveChance=0.1,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=1,RLFireRate=0.5,ShieldChance=0.0,ShieldDuration=0.0,ShieldCooldown=5.0,ShootObstacleChance=0.1,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.25,SneakAroundCooldown=20.0,TeleportChance=0.0,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.25,EscapingIgnoreDamageRate=0.7,HealingIgnoreDamageRate=1.0)
-    CombatStages(1)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.5,ChargeCooldown=5.0,ForceChargeCooldown=4.0,ForceChargeDamageThreshold=0.1,MaxChargeGroupDistance=450,MaxChargeSingleDistance=750,RadialAttackCirclersChance=0.2,CGShots=100,CGFireRate=0.04,CGChargeChance=0.25,CGChargeDamageThreshold=0.15,CGMoveChance=0.25,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=1,RLFireRate=0.4,ShieldChance=0.0,ShieldDuration=0.0,ShieldCooldown=5.0,ShootObstacleChance=0.2,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.35,SneakAroundCooldown=20.0,TeleportChance=0.0,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.5,EscapingIgnoreDamageRate=0.6,HealingIgnoreDamageRate=1.0)
-    CombatStages(2)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.25,ChargeCooldown=5.0,ForceChargeCooldown=3.5,ForceChargeDamageThreshold=0.2,MaxChargeGroupDistance=500,MaxChargeSingleDistance=800,RadialAttackCirclersChance=0.3,CGShots=100,CGFireRate=0.035,CGChargeChance=0.4,CGChargeDamageThreshold=0.15,CGMoveChance=0.4,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=2,RLFireRate=0.3,ShieldChance=0.03,ShieldDuration=1.0,ShieldCooldown=5.0,ShootObstacleChance=0.4,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.5,SneakAroundCooldown=17.5,TeleportChance=0.1,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.75,EscapingIgnoreDamageRate=0.5,HealingIgnoreDamageRate=0.8)
-    CombatStages(3)=(MinPseudos=3,MaxPseudos=5,KiteChance=0.1,ChargeCooldown=5.0,ForceChargeCooldown=3.0,ForceChargeDamageThreshold=0.25,MaxChargeGroupDistance=500,MaxChargeSingleDistance=850,RadialAttackCirclersChance=0.5,CGShots=125,CGFireRate=0.03,CGChargeChance=0.5,CGChargeDamageThreshold=0.15,CGMoveChance=0.5,PseudoSwitchChance=0.5,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.25,RLShots=3,RLFireRate=0.2,ShieldChance=0.05,ShieldDuration=2.0,ShieldCooldown=5.0,ShootObstacleChance=0.5,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.75,SneakAroundCooldown=15.0,TeleportChance=0.15,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=1.0,EscapingIgnoreDamageRate=0.4,HealingIgnoreDamageRate=0.7)
+    CombatStages(0)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.75,ChargeCooldown=5.0,ForceChargeCooldown=5.0,ForceChargeDamageThreshold=0.1,MaxChargeGroupDistance=400,MaxChargeSingleDistance=700,RadialAttackCirclersChance=0.1,CGShots=75,CGFireRate=0.05,CGRunChance=0.1,CGRunDamageThreshold=0.15,CGMoveChance=0.1,CGChargeAtNearbyChance=0.5,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=1,RLFireRate=0.5,ShieldChance=0.0,ShieldDuration=0.0,ShieldCooldown=5.0,ShootObstacleChance=0.1,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.25,SneakAroundCooldown=20.0,TeleportChance=0.0,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.25,EscapingIgnoreDamageRate=0.7,HealingIgnoreDamageRate=1.0)
+    CombatStages(1)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.5,ChargeCooldown=5.0,ForceChargeCooldown=4.0,ForceChargeDamageThreshold=0.1,MaxChargeGroupDistance=450,MaxChargeSingleDistance=750,RadialAttackCirclersChance=0.2,CGShots=100,CGFireRate=0.04,CGRunChance=0.25,CGRunDamageThreshold=0.15,CGMoveChance=0.25,CGChargeAtNearbyChance=0.4,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=1,RLFireRate=0.4,ShieldChance=0.0,ShieldDuration=0.0,ShieldCooldown=5.0,ShootObstacleChance=0.2,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.35,SneakAroundCooldown=20.0,TeleportChance=0.0,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.5,EscapingIgnoreDamageRate=0.6,HealingIgnoreDamageRate=1.0)
+    CombatStages(2)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.25,ChargeCooldown=5.0,ForceChargeCooldown=3.5,ForceChargeDamageThreshold=0.2,MaxChargeGroupDistance=500,MaxChargeSingleDistance=800,RadialAttackCirclersChance=0.3,CGShots=100,CGFireRate=0.035,CGRunChance=0.4,CGRunDamageThreshold=0.15,CGMoveChance=0.4,CGChargeAtNearbyChance=0.3,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=2,RLFireRate=0.3,ShieldChance=0.03,ShieldDuration=1.0,ShieldCooldown=5.0,ShootObstacleChance=0.4,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.5,SneakAroundCooldown=17.5,TeleportChance=0.1,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.75,EscapingIgnoreDamageRate=0.5,HealingIgnoreDamageRate=0.8)
+    CombatStages(3)=(MinPseudos=3,MaxPseudos=5,KiteChance=0.1,ChargeCooldown=5.0,ForceChargeCooldown=3.0,ForceChargeDamageThreshold=0.25,MaxChargeGroupDistance=500,MaxChargeSingleDistance=850,RadialAttackCirclersChance=0.5,CGShots=125,CGFireRate=0.03,CGRunChance=0.5,CGRunDamageThreshold=0.15,CGMoveChance=0.5,CGChargeAtNearbyChance=0.2,PseudoSwitchChance=0.5,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.25,RLShots=3,RLFireRate=0.2,ShieldChance=0.05,ShieldDuration=2.0,ShieldCooldown=5.0,ShootObstacleChance=0.5,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.75,SneakAroundCooldown=15.0,TeleportChance=0.15,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=1.0,EscapingIgnoreDamageRate=0.4,HealingIgnoreDamageRate=0.7)
 
-    DefaultCombatStages(0)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.75,ChargeCooldown=5.0,ForceChargeCooldown=5.0,ForceChargeDamageThreshold=0.1,MaxChargeGroupDistance=400,MaxChargeSingleDistance=700,RadialAttackCirclersChance=0.1,CGShots=75,CGFireRate=0.05,CGChargeChance=0.1,CGChargeDamageThreshold=0.15,CGMoveChance=0.1,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=1,RLFireRate=0.5,ShieldChance=0.0,ShieldDuration=0.0,ShieldCooldown=5.0,ShootObstacleChance=0.1,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.25,SneakAroundCooldown=20.0,TeleportChance=0.0,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.25,EscapingIgnoreDamageRate=0.7,HealingIgnoreDamageRate=1.0)
-    DefaultCombatStages(1)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.5,ChargeCooldown=5.0,ForceChargeCooldown=4.0,ForceChargeDamageThreshold=0.1,MaxChargeGroupDistance=450,MaxChargeSingleDistance=750,RadialAttackCirclersChance=0.2,CGShots=100,CGFireRate=0.04,CGChargeChance=0.25,CGChargeDamageThreshold=0.15,CGMoveChance=0.25,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=1,RLFireRate=0.4,ShieldChance=0.0,ShieldDuration=0.0,ShieldCooldown=5.0,ShootObstacleChance=0.2,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.35,SneakAroundCooldown=20.0,TeleportChance=0.0,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.5,EscapingIgnoreDamageRate=0.6,HealingIgnoreDamageRate=1.0)
-    DefaultCombatStages(2)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.25,ChargeCooldown=5.0,ForceChargeCooldown=3.5,ForceChargeDamageThreshold=0.2,MaxChargeGroupDistance=500,MaxChargeSingleDistance=800,RadialAttackCirclersChance=0.3,CGShots=100,CGFireRate=0.035,CGChargeChance=0.4,CGChargeDamageThreshold=0.15,CGMoveChance=0.4,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=2,RLFireRate=0.3,ShieldChance=0.03,ShieldDuration=1.0,ShieldCooldown=5.0,ShootObstacleChance=0.4,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.5,SneakAroundCooldown=17.5,TeleportChance=0.1,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.75,EscapingIgnoreDamageRate=0.5,HealingIgnoreDamageRate=0.8)
-    DefaultCombatStages(3)=(MinPseudos=3,MaxPseudos=5,KiteChance=0.1,ChargeCooldown=5.0,ForceChargeCooldown=3.0,ForceChargeDamageThreshold=0.25,MaxChargeGroupDistance=500,MaxChargeSingleDistance=850,RadialAttackCirclersChance=0.5,CGShots=125,CGFireRate=0.03,CGChargeChance=0.5,CGChargeDamageThreshold=0.15,CGMoveChance=0.5,PseudoSwitchChance=0.5,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.25,RLShots=3,RLFireRate=0.2,ShieldChance=0.05,ShieldDuration=2.0,ShieldCooldown=5.0,ShootObstacleChance=0.5,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.75,SneakAroundCooldown=15.0,TeleportChance=0.15,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=1.0,EscapingIgnoreDamageRate=0.4,HealingIgnoreDamageRate=0.7)
+    DefaultCombatStages(0)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.75,ChargeCooldown=5.0,ForceChargeCooldown=5.0,ForceChargeDamageThreshold=0.1,MaxChargeGroupDistance=400,MaxChargeSingleDistance=700,RadialAttackCirclersChance=0.1,CGShots=75,CGFireRate=0.05,CGRunChance=0.1,CGRunDamageThreshold=0.15,CGMoveChance=0.1,CGChargeAtNearbyChance=0.5,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=1,RLFireRate=0.5,ShieldChance=0.0,ShieldDuration=0.0,ShieldCooldown=5.0,ShootObstacleChance=0.1,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.25,SneakAroundCooldown=20.0,TeleportChance=0.0,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.25,EscapingIgnoreDamageRate=0.7,HealingIgnoreDamageRate=1.0)
+    DefaultCombatStages(1)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.5,ChargeCooldown=5.0,ForceChargeCooldown=4.0,ForceChargeDamageThreshold=0.1,MaxChargeGroupDistance=450,MaxChargeSingleDistance=750,RadialAttackCirclersChance=0.2,CGShots=100,CGFireRate=0.04,CGRunChance=0.25,CGRunDamageThreshold=0.15,CGMoveChance=0.25,CGChargeAtNearbyChance=0.4,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=1,RLFireRate=0.4,ShieldChance=0.0,ShieldDuration=0.0,ShieldCooldown=5.0,ShootObstacleChance=0.2,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.35,SneakAroundCooldown=20.0,TeleportChance=0.0,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.5,EscapingIgnoreDamageRate=0.6,HealingIgnoreDamageRate=1.0)
+    DefaultCombatStages(2)=(MinPseudos=0,MaxPseudos=0,KiteChance=0.25,ChargeCooldown=5.0,ForceChargeCooldown=3.5,ForceChargeDamageThreshold=0.2,MaxChargeGroupDistance=500,MaxChargeSingleDistance=800,RadialAttackCirclersChance=0.3,CGShots=100,CGFireRate=0.035,CGRunChance=0.4,CGRunDamageThreshold=0.15,CGMoveChance=0.4,CGChargeAtNearbyChance=0.3,PseudoSwitchChance=0.0,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.0,RLShots=2,RLFireRate=0.3,ShieldChance=0.03,ShieldDuration=1.0,ShieldCooldown=5.0,ShootObstacleChance=0.4,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.5,SneakAroundCooldown=17.5,TeleportChance=0.1,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=0.75,EscapingIgnoreDamageRate=0.5,HealingIgnoreDamageRate=0.8)
+    DefaultCombatStages(3)=(MinPseudos=3,MaxPseudos=5,KiteChance=0.1,ChargeCooldown=5.0,ForceChargeCooldown=3.0,ForceChargeDamageThreshold=0.25,MaxChargeGroupDistance=500,MaxChargeSingleDistance=850,RadialAttackCirclersChance=0.5,CGShots=125,CGFireRate=0.03,CGRunChance=0.5,CGRunDamageThreshold=0.15,CGMoveChance=0.5,CGChargeAtNearbyChance=0.2,PseudoSwitchChance=0.5,PseudoSwitchCooldown=3.0,PseudoSwitchDamageThreshold=0.25,RLShots=3,RLFireRate=0.2,ShieldChance=0.05,ShieldDuration=2.0,ShieldCooldown=5.0,ShootObstacleChance=0.5,ShootObstacleMaxDistance=2000,SneakAroundOnHealChance=0.75,SneakAroundCooldown=15.0,TeleportChance=0.15,TeleportCooldown=20.0,TeleportMinDistance=1500,TeleportMinApproachDistance=700,TeleportMaxApproachDistance=1000,ShieldIgnoreDamageRate=1.0,EscapingIgnoreDamageRate=0.4,HealingIgnoreDamageRate=0.7)
 
     PatHealth=4000
     CGDamage=5.000000

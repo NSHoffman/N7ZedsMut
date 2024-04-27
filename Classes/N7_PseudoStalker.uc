@@ -7,6 +7,10 @@ simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
 
+    Health = default.Health;
+    HealthMax = default.HealthMax;
+    HeadHealth = default.HeadHealth;
+
     SetTimer(1, False);
 }
 

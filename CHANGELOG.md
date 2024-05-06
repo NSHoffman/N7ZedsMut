@@ -83,3 +83,7 @@
 - Fixed fleshpound's device light not changing fully to red when he gets raged by explosions.
 - Fixed fleshpound's spinning when raging and other ZEDs are around.
 - Fixed fleshpound's unraging before door bashing.
+
+#### `1.4.1`
+
+- Custom skins pack upgraded to v1.1.0
